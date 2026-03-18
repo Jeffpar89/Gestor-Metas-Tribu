@@ -31,11 +31,13 @@ interface ModelData {
   id: string;
   name: string;
   level: 'Elite' | 'Avanzado' | 'Desarrollo';
+  shift: 'Mañana' | 'Tarde' | 'Noche';
   currentTokens: number;
   baseGoal: number;
   challengeGoal: number;
   strategicFocus: string;
   strategyDetails: string;
+  steps: string[];
   lastUpdate: string;
 }
 
@@ -43,58 +45,239 @@ interface ModelData {
 const INITIAL_MODELS: ModelData[] = [
   {
     id: '1',
-    name: 'Lorena López',
+    name: 'Tatiana Gonzalez',
     level: 'Elite',
+    shift: 'Noche',
+    currentTokens: 42339,
+    baseGoal: 48700,
+    challengeGoal: 55000,
+    strategicFocus: 'Blindaje VIP',
+    strategyDetails: 'Como la Top del estudio, su tiempo vale oro. Su estrategia es cobrar entradas más altas a sus shows privados y vender la "ilusión de novia" o exclusividad extrema a usuarios de alto poder adquisitivo.',
+    steps: [
+      'Aumento de ticket promedio: Sube el precio de su show privado al menos un 15%.',
+      'Venta de "Girlfriend Experience" (GFE): Paquetes de "Novia Virtual" para grandes gastadores.',
+      'Shows a puerta cerrada: Shows privados grupales (Ticket shows) con cupos limitados.'
+    ],
+    lastUpdate: '18 de Marzo'
+  },
+  {
+    id: '2',
+    name: 'Daniela Pertuz',
+    level: 'Elite',
+    shift: 'Tarde',
+    currentTokens: 27337,
+    baseGoal: 31400,
+    challengeGoal: 35500,
+    strategicFocus: 'Retención por Energía',
+    strategyDetails: 'Canalizar esa gran energía en shows de larga duración. Usar ruletas dinámicas, juegos constantes y shows sexuales intensos para que los usuarios no se aburran.',
+    steps: [
+      'Ruletas de alta intensidad (Gamificación): Opciones muy dinámicas y de rápida ejecución.',
+      'Retos de resistencia (Edging): Juegos donde paguen para acercarla al orgasmo y luego para detenerla.'
+    ],
+    lastUpdate: '18 de Marzo'
+  },
+  {
+    id: '3',
+    name: 'Ruben y Natalia',
+    level: 'Elite',
+    shift: 'Noche',
+    currentTokens: 25201,
+    baseGoal: 29000,
+    challengeGoal: 32800,
+    strategicFocus: 'Voyeurismo Interactivo',
+    strategyDetails: 'Explotar la fantasía de mirar a una pareja. Cobrar por cambiar de posiciones, tomar el control del ritmo (Lovense/Fuckmachine) o shows interactivos.',
+    steps: [
+      'Voyeurismo Interactivo (Lovense): Conectar los juguetes a las propinas para control físico.',
+      'Privados "Director de Escena": El usuario da órdenes exactas de qué posiciones hacer.'
+    ],
+    lastUpdate: '18 de Marzo'
+  },
+  {
+    id: '4',
+    name: 'Maria Gonzalez',
+    level: 'Avanzado',
+    shift: 'Mañana',
+    currentTokens: 17180,
+    baseGoal: 19800,
+    challengeGoal: 22300,
+    strategicFocus: 'Juegos de Rol Premium',
+    strategyDetails: 'Cobrar caro por fantasías específicas (Jefa, Profesora). Mezclar la dominación con la exhibición de sus atributos físicos.',
+    steps: [
+      'Calendario de Roles Premium: Anunciar personajes con anticipación (Secretaria, Madrastra).',
+      'Fetiche de Senos + Dominación: Cobrar por humillación de tamaño o shows exclusivos de Titjob.'
+    ],
+    lastUpdate: '18 de Marzo'
+  },
+  {
+    id: '0',
+    name: 'Lorena López',
+    level: 'Avanzado',
+    shift: 'Tarde',
     currentTokens: 13000,
     baseGoal: 15000,
     challengeGoal: 17000,
     strategicFocus: 'Monetizar Shows Premium',
     strategyDetails: 'Tus shows de fuckmachine y anal deben tener un precio premium por meta o ticket privado. Aprovecha tu experiencia para guiar a los usuarios "Ballena" (grandes gastadores).',
-    lastUpdate: '01 de Marzo'
+    steps: [
+      'Identificar usuarios recurrentes',
+      'Aplicar líneas de venta específicas',
+      'Optimizar tiempos de show',
+      'Actualizar metas visuales en sala'
+    ],
+    lastUpdate: '18 de Marzo'
   },
   {
-    id: '2',
+    id: 'ari-1',
     name: 'Ari Espinoza',
-    level: 'Elite',
+    level: 'Avanzado',
+    shift: 'Mañana',
     currentTokens: 10771,
     baseGoal: 12400,
     challengeGoal: 14000,
     strategicFocus: 'Shows Explícitos Costosos',
     strategyDetails: 'Blindar tus shows explícitos e intensos detrás de tickets privados más costosos o metas altas de sala. Monetiza la exclusividad de tu belleza peculiar.',
-    lastUpdate: '01 de Marzo'
+    steps: [
+      'Identificar usuarios recurrentes',
+      'Aplicar líneas de venta específicas',
+      'Optimizar tiempos de show',
+      'Actualizar metas visuales en sala'
+    ],
+    lastUpdate: '18 de Marzo'
   },
   {
-    id: '3',
+    id: 'nat-1',
     name: 'Natalia Novoa',
     level: 'Avanzado',
+    shift: 'Tarde',
     currentTokens: 8959,
     baseGoal: 10300,
     challengeGoal: 11600,
     strategicFocus: 'Exclusividad VIP & Medias',
     strategyDetails: 'Tu meta es cruzar los 10k. Presiona la venta de contenido privado (fotos de pies/tacones/medias) y ofrece shows VIP a tus mejores usuarios con un tono sofisticado.',
-    lastUpdate: '01 de Marzo'
+    steps: [
+      'Identificar usuarios recurrentes',
+      'Aplicar líneas de venta específicas',
+      'Optimizar tiempos de show',
+      'Actualizar metas visuales en sala'
+    ],
+    lastUpdate: '18 de Marzo'
   },
   {
-    id: '4',
+    id: '5',
+    name: 'Katie Palacios',
+    level: 'Avanzado',
+    shift: 'Noche',
+    currentTokens: 8449,
+    baseGoal: 9700,
+    challengeGoal: 11000,
+    strategicFocus: 'El Anal como Lujo',
+    strategyDetails: 'Su meta es cruzar los 10k cobrando el anal no como algo rutinario, sino como una meta (goal) muy alta o ticket privado premium.',
+    steps: [
+      'La "Escalera" Anal: Empezar con tease, meta media para plug y plato fuerte para privado.',
+      'Venta de contenido Offline: Grabar clips cortos y muy estéticos para vender por mensaje directo.'
+    ],
+    lastUpdate: '18 de Marzo'
+  },
+  {
+    id: 'val-1',
+    name: 'Valentina Botia',
+    level: 'Avanzado',
+    shift: 'Mañana',
+    currentTokens: 8042,
+    baseGoal: 9250,
+    challengeGoal: 10500,
+    strategicFocus: 'Monetizar lo Inalcanzable',
+    strategyDetails: 'Su nicho de leche es un "unicornio" en la industria. Su meta es cruzar los 10k cobrando este fetiche (y el anal) como un lujo absoluto, no como un show de rutina.',
+    steps: [
+      '"El Oro Blanco" (Lactancia Premium): Configurar como meta final alta (3000-5000 tokens) o shows privados de alto costo.',
+      'Escalera de Curvas (Oil & Tease): Metas intermedias para aceitarse el cuerpo, calentando la sala para los "Ballena".',
+      'Contraste "Cara Bella / Show Extremo": Resaltar el contraste entre su rostro angelical y shows tabú (anal pesado/lactancia).'
+    ],
+    lastUpdate: '18 de Marzo'
+  },
+  {
+    id: '6',
+    name: 'Maria Sambony',
+    level: 'Avanzado',
+    shift: 'Tarde',
+    currentTokens: 7873,
+    baseGoal: 9100,
+    challengeGoal: 10200,
+    strategicFocus: 'Findom y Tributos',
+    strategyDetails: 'Encontrar "esclavos de billetera". Enseñar que el simple privilegio de estar en su sala y verla requiere un "tributo" (propina obligatoria).',
+    steps: [
+      'Peaje de Entrada (Tributos): Implementar la regla de "Tip to Talk" (Propina para hablar).',
+      'Tareas de Humillación: Vender el control psicológico (Arrodíllate, Alaba mi cuerpo).'
+    ],
+    lastUpdate: '18 de Marzo'
+  },
+  {
+    id: 'jei-1',
     name: 'Jeimy Escobar',
     level: 'Avanzado',
+    shift: 'Noche',
     currentTokens: 7760,
     baseGoal: 8900,
     challengeGoal: 10000,
     strategicFocus: 'Findom & Fetiches MILF',
     strategyDetails: 'Tu meta es tocar los 10k. Usa tu perfil MILF elegante para aplicar humillación financiera (Findom ligero) a tus cornudos y cobrar por adoración de tus fetiches.',
-    lastUpdate: '01 de Marzo'
+    steps: [
+      'Identificar usuarios recurrentes',
+      'Aplicar líneas de venta específicas',
+      'Optimizar tiempos de show',
+      'Actualizar metas visuales en sala'
+    ],
+    lastUpdate: '18 de Marzo'
   },
   {
-    id: '5',
+    id: '7',
+    name: 'Lesly Ruiz',
+    level: 'Desarrollo',
+    shift: 'Mañana',
+    currentTokens: 2022,
+    baseGoal: 2300,
+    challengeGoal: 2600,
+    strategicFocus: 'Meta de Disciplina',
+    strategyDetails: 'Su foco es 100% cumplir horarios, apegarse a una línea de ventas sencilla (coqueteo Teen) y ganar paciencia.',
+    steps: [
+      'Micro-Metas de Horario: Dividir turno en bloques de 2 horas con incentivos por cumplimiento.',
+      'Simplificación del Show: Charla dulce, sonreír mucho y fetiches básicos para retener usuarios.'
+    ],
+    lastUpdate: '18 de Marzo'
+  },
+  {
+    id: 'lil-1',
     name: 'Liliana Delgado',
     level: 'Desarrollo',
+    shift: 'Tarde',
     currentTokens: 1845,
     baseGoal: 5000,
     challengeGoal: 8000,
     strategicFocus: 'Constancia & Aplicación de Líneas',
     strategyDetails: 'Enfócate en la constancia y en aplicar estrictamente tus Líneas de Venta (especialmente Kinky o Cornudo). Tu meta es generar 2 o 3 usuarios recurrentes esta quincena.',
-    lastUpdate: '01 de Marzo'
+    steps: [
+      'Identificar usuarios recurrentes',
+      'Aplicar líneas de venta específicas',
+      'Optimizar tiempos de show',
+      'Actualizar metas visuales en sala'
+    ],
+    lastUpdate: '18 de Marzo'
+  },
+  {
+    id: '8',
+    name: 'Diana Borrero',
+    level: 'Desarrollo',
+    shift: 'Noche',
+    currentTokens: 1278,
+    baseGoal: 1500,
+    challengeGoal: 1700,
+    strategicFocus: 'La trampa de la "Nueva"',
+    strategyDetails: 'Aprovechar el tráfico extra por ser nueva bajando precios de acciones básicas para que muchos usuarios interactúen.',
+    steps: [
+      'Aprovechar tráfico de "Nueva": Precios bajos en acciones básicas para interacción masiva.',
+      'Vender "Primeras Veces": Cobrar más por quitarle la exclusividad a una modelo nueva.'
+    ],
+    lastUpdate: '18 de Marzo'
   }
 ];
 
@@ -112,16 +295,19 @@ const LEVEL_ICONS = {
 
 export default function App() {
   const [models, setModels] = useState<ModelData[]>(() => {
-    const saved = localStorage.getItem('studio_models');
+    const saved = localStorage.getItem('tribu_models_v7');
     return saved ? JSON.parse(saved) : INITIAL_MODELS;
   });
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
   const [view, setView] = useState<'dashboard' | 'model' | 'admin'>('dashboard');
   const [editingModel, setEditingModel] = useState<ModelData | null>(null);
+  const [shiftFilter, setShiftFilter] = useState<'Todos' | 'Mañana' | 'Tarde' | 'Noche'>('Todos');
 
   useEffect(() => {
-    localStorage.setItem('studio_models', JSON.stringify(models));
+    localStorage.setItem('tribu_models_v7', JSON.stringify(models));
   }, [models]);
+
+  const filteredModels = models.filter(m => shiftFilter === 'Todos' || m.shift === shiftFilter);
 
   const selectedModel = models.find(m => m.id === selectedModelId);
 
@@ -140,11 +326,13 @@ export default function App() {
       id: Date.now().toString(),
       name: 'Nueva Modelo',
       level: 'Desarrollo',
+      shift: 'Mañana',
       currentTokens: 0,
       baseGoal: 0,
       challengeGoal: 0,
       strategicFocus: '',
       strategyDetails: '',
+      steps: [],
       lastUpdate: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long' })
     };
     setModels(prev => [...prev, newModel]);
@@ -239,9 +427,29 @@ export default function App() {
                 </div>
               </div>
 
+              {/* Filters */}
+              <div className="flex items-center gap-4 overflow-x-auto pb-2">
+                <span className="text-white/40 text-xs font-bold uppercase tracking-widest whitespace-nowrap">Filtrar por Turno:</span>
+                <div className="flex items-center gap-2">
+                  {['Todos', 'Mañana', 'Tarde', 'Noche'].map((shift) => (
+                    <button
+                      key={shift}
+                      onClick={() => setShiftFilter(shift as any)}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold transition-all border ${
+                        shiftFilter === shift 
+                          ? 'bg-red-500 border-red-500 text-white' 
+                          : 'bg-white/5 border-white/10 text-white/60 hover:border-white/20'
+                      }`}
+                    >
+                      {shift}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               {/* Models Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {models.map((model) => (
+                {filteredModels.map((model) => (
                   <motion.div
                     key={model.id}
                     whileHover={{ y: -5 }}
@@ -250,9 +458,14 @@ export default function App() {
                   >
                     <div className="flex justify-between items-start mb-6">
                       <div className="space-y-1">
-                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${LEVEL_COLORS[model.level]}`}>
-                          {LEVEL_ICONS[model.level]}
-                          {model.level}
+                        <div className="flex gap-2 mb-1">
+                          <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${LEVEL_COLORS[model.level]}`}>
+                            {LEVEL_ICONS[model.level]}
+                            {model.level}
+                          </div>
+                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-white/10 bg-white/5 text-white/60">
+                            {model.shift}
+                          </div>
                         </div>
                         <h3 className="text-xl font-bold group-hover:text-red-400 transition-colors">{model.name}</h3>
                       </div>
@@ -372,12 +585,7 @@ export default function App() {
                     <div className="space-y-4">
                       <h4 className="text-sm font-bold uppercase tracking-widest text-white/40">Pasos a seguir:</h4>
                       <ul className="space-y-3">
-                        {[
-                          "Identificar usuarios recurrentes",
-                          "Aplicar líneas de venta específicas",
-                          "Optimizar tiempos de show",
-                          "Actualizar metas visuales en sala"
-                        ].map((step, i) => (
+                        {selectedModel?.steps.map((step, i) => (
                           <li key={i} className="flex items-center gap-3 text-white/70">
                             <CheckCircle2 className="w-5 h-5 text-red-500" />
                             {step}
@@ -533,6 +741,18 @@ export default function App() {
                             <option value="Elite">Elite</option>
                             <option value="Avanzado">Avanzado</option>
                             <option value="Desarrollo">Desarrollo</option>
+                          </select>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs font-bold text-white/40 uppercase tracking-widest">Turno</label>
+                          <select 
+                            value={editingModel.shift}
+                            onChange={(e) => setEditingModel({...editingModel, shift: e.target.value as any})}
+                            className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:border-red-500 transition-all"
+                          >
+                            <option value="Mañana">Mañana</option>
+                            <option value="Tarde">Tarde</option>
+                            <option value="Noche">Noche</option>
                           </select>
                         </div>
                         <div className="space-y-2">
