@@ -22,11 +22,31 @@ import {
   X,
   Plus,
   Trash2,
-  Edit2
+  Edit2,
+  BarChart3,
+  TrendingDown,
+  Calendar
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  AreaChart,
+  Area
+} from 'recharts';
 
 // Types
+interface HistoryRecord {
+  period: string;
+  tokens: number;
+  timestamp: number;
+}
+
 interface ModelData {
   id: string;
   name: string;
@@ -39,6 +59,7 @@ interface ModelData {
   strategyDetails: string;
   steps: string[];
   lastUpdate: string;
+  history: HistoryRecord[]; // Last fortnights
 }
 
 // Initial Data
@@ -58,7 +79,11 @@ const INITIAL_MODELS: ModelData[] = [
       'Venta de "Girlfriend Experience" (GFE): Paquetes de "Novia Virtual" para grandes gastadores.',
       'Shows a puerta cerrada: Shows privados grupales (Ticket shows) con cupos limitados.'
     ],
-    lastUpdate: '18 de Marzo'
+    lastUpdate: '15 de Marzo',
+    history: [
+      { period: '1-15 Feb 2026', tokens: 38500, timestamp: new Date(2026, 1, 1).getTime() },
+      { period: '16-28 Feb 2026', tokens: 40100, timestamp: new Date(2026, 1, 16).getTime() }
+    ]
   },
   {
     id: '2',
@@ -74,7 +99,11 @@ const INITIAL_MODELS: ModelData[] = [
       'Ruletas de alta intensidad (Gamificación): Opciones muy dinámicas y de rápida ejecución.',
       'Retos de resistencia (Edging): Juegos donde paguen para acercarla al orgasmo y luego para detenerla.'
     ],
-    lastUpdate: '18 de Marzo'
+    lastUpdate: '15 de Marzo',
+    history: [
+      { period: '1-15 Feb 2026', tokens: 24500, timestamp: new Date(2026, 1, 1).getTime() },
+      { period: '16-28 Feb 2026', tokens: 25800, timestamp: new Date(2026, 1, 16).getTime() }
+    ]
   },
   {
     id: '3',
@@ -90,7 +119,11 @@ const INITIAL_MODELS: ModelData[] = [
       'Voyeurismo Interactivo (Lovense): Conectar los juguetes a las propinas para control físico.',
       'Privados "Director de Escena": El usuario da órdenes exactas de qué posiciones hacer.'
     ],
-    lastUpdate: '18 de Marzo'
+    lastUpdate: '15 de Marzo',
+    history: [
+      { period: '1-15 Feb 2026', tokens: 22000, timestamp: new Date(2026, 1, 1).getTime() },
+      { period: '16-28 Feb 2026', tokens: 23500, timestamp: new Date(2026, 1, 16).getTime() }
+    ]
   },
   {
     id: '4',
@@ -106,7 +139,11 @@ const INITIAL_MODELS: ModelData[] = [
       'Calendario de Roles Premium: Anunciar personajes con anticipación (Secretaria, Madrastra).',
       'Fetiche de Senos + Dominación: Cobrar por humillación de tamaño o shows exclusivos de Titjob.'
     ],
-    lastUpdate: '18 de Marzo'
+    lastUpdate: '15 de Marzo',
+    history: [
+      { period: '1-15 Feb 2026', tokens: 15200, timestamp: new Date(2026, 1, 1).getTime() },
+      { period: '16-28 Feb 2026', tokens: 16100, timestamp: new Date(2026, 1, 16).getTime() }
+    ]
   },
   {
     id: '0',
@@ -124,7 +161,11 @@ const INITIAL_MODELS: ModelData[] = [
       'Optimizar tiempos de show',
       'Actualizar metas visuales en sala'
     ],
-    lastUpdate: '18 de Marzo'
+    lastUpdate: '15 de Marzo',
+    history: [
+      { period: '1-15 Feb 2026', tokens: 11500, timestamp: new Date(2026, 1, 1).getTime() },
+      { period: '16-28 Feb 2026', tokens: 12200, timestamp: new Date(2026, 1, 16).getTime() }
+    ]
   },
   {
     id: 'ari-1',
@@ -142,7 +183,11 @@ const INITIAL_MODELS: ModelData[] = [
       'Optimizar tiempos de show',
       'Actualizar metas visuales en sala'
     ],
-    lastUpdate: '18 de Marzo'
+    lastUpdate: '15 de Marzo',
+    history: [
+      { period: '1-15 Feb 2026', tokens: 9500, timestamp: new Date(2026, 1, 1).getTime() },
+      { period: '16-28 Feb 2026', tokens: 10100, timestamp: new Date(2026, 1, 16).getTime() }
+    ]
   },
   {
     id: 'nat-1',
@@ -160,7 +205,11 @@ const INITIAL_MODELS: ModelData[] = [
       'Optimizar tiempos de show',
       'Actualizar metas visuales en sala'
     ],
-    lastUpdate: '18 de Marzo'
+    lastUpdate: '15 de Marzo',
+    history: [
+      { period: '1-15 Feb 2026', tokens: 7800, timestamp: new Date(2026, 1, 1).getTime() },
+      { period: '16-28 Feb 2026', tokens: 8200, timestamp: new Date(2026, 1, 16).getTime() }
+    ]
   },
   {
     id: '5',
@@ -176,7 +225,11 @@ const INITIAL_MODELS: ModelData[] = [
       'La "Escalera" Anal: Empezar con tease, meta media para plug y plato fuerte para privado.',
       'Venta de contenido Offline: Grabar clips cortos y muy estéticos para vender por mensaje directo.'
     ],
-    lastUpdate: '18 de Marzo'
+    lastUpdate: '15 de Marzo',
+    history: [
+      { period: '1-15 Feb 2026', tokens: 7200, timestamp: new Date(2026, 1, 1).getTime() },
+      { period: '16-28 Feb 2026', tokens: 7800, timestamp: new Date(2026, 1, 16).getTime() }
+    ]
   },
   {
     id: 'val-1',
@@ -187,13 +240,17 @@ const INITIAL_MODELS: ModelData[] = [
     baseGoal: 9250,
     challengeGoal: 10500,
     strategicFocus: 'Monetizar lo Inalcanzable',
-    strategyDetails: 'Su nicho de leche es un "unicornio" en la industria. Su meta es cruzar los 10k cobrando este fetiche (y el anal) como un lujo absoluto, no como un show de rutina.',
+    strategyDetails: 'Su nicho de leche es un "unicornio" en la industria. Su meta es cruzar los 10k cobrando este fetiche (y el anal) si no como un lujo absoluto, no como un show de rutina.',
     steps: [
       '"El Oro Blanco" (Lactancia Premium): Configurar como meta final alta (3000-5000 tokens) o shows privados de alto costo.',
       'Escalera de Curvas (Oil & Tease): Metas intermedias para aceitarse el cuerpo, calentando la sala para los "Ballena".',
       'Contraste "Cara Bella / Show Extremo": Resaltar el contraste entre su rostro angelical y shows tabú (anal pesado/lactancia).'
     ],
-    lastUpdate: '18 de Marzo'
+    lastUpdate: '15 de Marzo',
+    history: [
+      { period: '1-15 Feb 2026', tokens: 6800, timestamp: new Date(2026, 1, 1).getTime() },
+      { period: '16-28 Feb 2026', tokens: 7400, timestamp: new Date(2026, 1, 16).getTime() }
+    ]
   },
   {
     id: '6',
@@ -209,7 +266,11 @@ const INITIAL_MODELS: ModelData[] = [
       'Peaje de Entrada (Tributos): Implementar la regla de "Tip to Talk" (Propina para hablar).',
       'Tareas de Humillación: Vender el control psicológico (Arrodíllate, Alaba mi cuerpo).'
     ],
-    lastUpdate: '18 de Marzo'
+    lastUpdate: '15 de Marzo',
+    history: [
+      { period: '1-15 Feb 2026', tokens: 6500, timestamp: new Date(2026, 1, 1).getTime() },
+      { period: '16-28 Feb 2026', tokens: 7100, timestamp: new Date(2026, 1, 16).getTime() }
+    ]
   },
   {
     id: 'jei-1',
@@ -227,7 +288,11 @@ const INITIAL_MODELS: ModelData[] = [
       'Optimizar tiempos de show',
       'Actualizar metas visuales en sala'
     ],
-    lastUpdate: '18 de Marzo'
+    lastUpdate: '15 de Marzo',
+    history: [
+      { period: '1-15 Feb 2026', tokens: 6200, timestamp: new Date(2026, 1, 1).getTime() },
+      { period: '16-28 Feb 2026', tokens: 6900, timestamp: new Date(2026, 1, 16).getTime() }
+    ]
   },
   {
     id: '7',
@@ -243,7 +308,11 @@ const INITIAL_MODELS: ModelData[] = [
       'Micro-Metas de Horario: Dividir turno en bloques de 2 horas con incentivos por cumplimiento.',
       'Simplificación del Show: Charla dulce, sonreír mucho y fetiches básicos para retener usuarios.'
     ],
-    lastUpdate: '18 de Marzo'
+    lastUpdate: '15 de Marzo',
+    history: [
+      { period: '1-15 Feb 2026', tokens: 1500, timestamp: new Date(2026, 1, 1).getTime() },
+      { period: '16-28 Feb 2026', tokens: 1700, timestamp: new Date(2026, 1, 16).getTime() }
+    ]
   },
   {
     id: 'lil-1',
@@ -261,7 +330,11 @@ const INITIAL_MODELS: ModelData[] = [
       'Optimizar tiempos de show',
       'Actualizar metas visuales en sala'
     ],
-    lastUpdate: '18 de Marzo'
+    lastUpdate: '15 de Marzo',
+    history: [
+      { period: '1-15 Feb 2026', tokens: 1200, timestamp: new Date(2026, 1, 1).getTime() },
+      { period: '16-28 Feb 2026', tokens: 1450, timestamp: new Date(2026, 1, 16).getTime() }
+    ]
   },
   {
     id: '8',
@@ -277,7 +350,11 @@ const INITIAL_MODELS: ModelData[] = [
       'Aprovechar tráfico de "Nueva": Precios bajos en acciones básicas para interacción masiva.',
       'Vender "Primeras Veces": Cobrar más por quitarle la exclusividad a una modelo nueva.'
     ],
-    lastUpdate: '18 de Marzo'
+    lastUpdate: '15 de Marzo',
+    history: [
+      { period: '1-15 Feb 2026', tokens: 800, timestamp: new Date(2026, 1, 1).getTime() },
+      { period: '16-28 Feb 2026', tokens: 1000, timestamp: new Date(2026, 1, 16).getTime() }
+    ]
   }
 ];
 
@@ -296,12 +373,89 @@ const LEVEL_ICONS = {
 export default function App() {
   const [models, setModels] = useState<ModelData[]>(() => {
     const saved = localStorage.getItem('tribu_models_v7');
-    return saved ? JSON.parse(saved) : INITIAL_MODELS;
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      // Ensure all models have the history property
+      return parsed.map((m: any) => ({
+        ...m,
+        history: Array.isArray(m.history) 
+          ? m.history.map((h: any) => {
+              if (typeof h === 'number') return { period: 'Anterior', tokens: h, timestamp: Date.now() };
+              return { ...h, timestamp: h.timestamp || Date.now() };
+            })
+          : []
+      }));
+    }
+    return INITIAL_MODELS;
   });
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
-  const [view, setView] = useState<'dashboard' | 'model' | 'admin'>('dashboard');
+  const [view, setView] = useState<'dashboard' | 'model' | 'admin' | 'performance'>('dashboard');
   const [editingModel, setEditingModel] = useState<ModelData | null>(null);
   const [shiftFilter, setShiftFilter] = useState<'Todos' | 'Mañana' | 'Tarde' | 'Noche'>('Todos');
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [closingPeriod, setClosingPeriod] = useState('');
+  const [modelToDelete, setModelToDelete] = useState<string | null>(null);
+
+  const getPreviousFortnightLabel = () => {
+    // If we have history, suggest the next logical one based on the last record
+    if (models.length > 0 && models[0].history.length > 0) {
+      const history = [...models[0].history].sort((a, b) => a.timestamp - b.timestamp);
+      const last = history[history.length - 1].period;
+      
+      if (last.includes('1-15')) return last.replace('1-15', '16-31');
+      if (last.includes('16-')) {
+        const parts = last.split(' ');
+        const monthMap: {[key: string]: string} = {
+          'ene': 'feb', 'feb': 'mar', 'mar': 'abr', 'abr': 'may', 'may': 'jun',
+          'jun': 'jul', 'jul': 'ago', 'ago': 'sep', 'sep': 'oct', 'oct': 'nov', 'nov': 'dic'
+        };
+        const currentMonth = parts[1].toLowerCase();
+        const nextMonth = monthMap[currentMonth] || 'ene';
+        const nextYear = currentMonth === 'dic' ? parseInt(parts[2]) + 1 : parts[2];
+        return `1-15 ${nextMonth.charAt(0).toUpperCase() + nextMonth.slice(1)} ${nextYear}`;
+      }
+    }
+
+    const targetDate = new Date();
+    const day = targetDate.getDate();
+    
+    if (day <= 15) {
+      targetDate.setDate(0);
+      const tDay = targetDate.getDate();
+      const tMonth = targetDate.toLocaleDateString('es-ES', { month: 'short' }).replace('.', '');
+      const tYear = targetDate.getFullYear();
+      return `16-${tDay} ${tMonth.charAt(0).toUpperCase() + tMonth.slice(1)} ${tYear}`;
+    } else {
+      const tMonth = targetDate.toLocaleDateString('es-ES', { month: 'short' }).replace('.', '');
+      const tYear = targetDate.getFullYear();
+      return `1-15 ${tMonth.charAt(0).toUpperCase() + tMonth.slice(1)} ${tYear}`;
+    }
+  };
+
+  useEffect(() => {
+    setClosingPeriod(getPreviousFortnightLabel());
+  }, [models]);
+
+  const handleCloseFortnight = () => {
+    setModels(prev => prev.map(m => {
+      // Calculate a timestamp for the new record that is slightly after the last one
+      const sortedHistory = [...(m.history || [])].sort((a, b) => a.timestamp - b.timestamp);
+      const lastTimestamp = sortedHistory.length > 0 ? sortedHistory[sortedHistory.length - 1].timestamp : Date.now() - 1000;
+      const newTimestamp = Math.max(Date.now(), lastTimestamp + 1000);
+
+      return {
+        ...m,
+        history: [...(m.history || []), { 
+          period: closingPeriod, 
+          tokens: m.currentTokens,
+          timestamp: newTimestamp
+        }].sort((a, b) => a.timestamp - b.timestamp).slice(-6),
+        currentTokens: 0,
+        lastUpdate: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long' })
+      };
+    }));
+    setShowCloseConfirm(false);
+  };
 
   useEffect(() => {
     localStorage.setItem('tribu_models_v7', JSON.stringify(models));
@@ -333,17 +487,17 @@ export default function App() {
       strategicFocus: '',
       strategyDetails: '',
       steps: [],
-      lastUpdate: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long' })
+      lastUpdate: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long' }),
+      history: []
     };
     setModels(prev => [...prev, newModel]);
     setEditingModel(newModel);
   };
 
   const handleDeleteModel = (id: string) => {
-    if (window.confirm('¿Estás seguro de eliminar esta modelo?')) {
-      setModels(prev => prev.filter(m => m.id !== id));
-      if (selectedModelId === id) setSelectedModelId(null);
-    }
+    setModels(prev => prev.filter(m => m.id !== id));
+    if (selectedModelId === id) setSelectedModelId(null);
+    setModelToDelete(null);
   };
 
   const calculateGoals = (tokens: number) => {
@@ -373,6 +527,12 @@ export default function App() {
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${view === 'dashboard' ? 'bg-white text-black' : 'text-white/60 hover:text-white'}`}
             >
               Estudio
+            </button>
+            <button 
+              onClick={() => setView('performance')}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${view === 'performance' ? 'bg-white text-black' : 'text-white/60 hover:text-white'}`}
+            >
+              Desempeño
             </button>
             <button 
               disabled={!selectedModelId}
@@ -497,6 +657,129 @@ export default function App() {
                     </div>
                   </motion.div>
                 ))}
+              </div>
+            </motion.div>
+          ) : view === 'performance' ? (
+            <motion.div 
+              key="performance"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-8"
+            >
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                <div>
+                  <h2 className="text-3xl font-bold">Desempeño Histórico</h2>
+                  <p className="text-white/40">Seguimiento de las últimas 4 quincenas (2 meses).</p>
+                </div>
+                <div className="flex items-center gap-2 bg-white/5 border border-white/10 p-1 rounded-2xl">
+                   <div className="px-4 py-2 flex items-center gap-2 text-sm font-bold text-white/60">
+                     <Calendar className="w-4 h-4" />
+                     Últimos 60 días
+                   </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6">
+                {models.map((model) => {
+                  const history = [...(model.history || [])].sort((a, b) => a.timestamp - b.timestamp);
+                  const data = history.map((record) => ({
+                    name: record.period,
+                    tokens: record.tokens
+                  }));
+                  
+                  const lastTokens = history.length > 0 ? history[history.length - 1].tokens : 0;
+                  const prevTokens = history.length > 1 ? history[history.length - 2].tokens : 0;
+                  const percentChange = prevTokens > 0 ? ((lastTokens - prevTokens) / prevTokens) * 100 : 0;
+
+                  return (
+                    <motion.div
+                      key={model.id}
+                      className="bg-white/5 border border-white/10 rounded-[2rem] p-6 md:p-8 hover:bg-white/[0.08] transition-all"
+                    >
+                      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                        <div className="lg:col-span-3 space-y-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center font-bold text-lg">
+                              {model.name.charAt(0)}
+                            </div>
+                            <div>
+                              <h3 className="text-xl font-bold">{model.name}</h3>
+                              <div className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider ${LEVEL_COLORS[model.level].split(' ')[1]}`}>
+                                {model.level}
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-black/40 rounded-2xl p-3 border border-white/5">
+                              <span className="block text-[10px] text-white/40 font-bold uppercase mb-1">Actual</span>
+                              <span className="text-lg font-mono font-bold">{lastTokens.toLocaleString()}</span>
+                            </div>
+                            <div className="bg-black/40 rounded-2xl p-3 border border-white/5">
+                              <span className="block text-[10px] text-white/40 font-bold uppercase mb-1">Tendencia</span>
+                              <div className={`flex items-center gap-1 text-sm font-bold ${percentChange >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                                {percentChange >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                                {Math.abs(percentChange).toFixed(1)}%
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="lg:col-span-6 h-[150px] w-full">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={data}>
+                              <defs>
+                                <linearGradient id={`gradient-${model.id}`} x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
+                              <XAxis 
+                                dataKey="name" 
+                                stroke="#ffffff20"
+                                fontSize={10}
+                                tickLine={false}
+                                axisLine={false}
+                                interval={0}
+                                tick={{ fill: 'rgba(255,255,255,0.4)', fontWeight: 'bold' }}
+                              />
+                              <YAxis hide domain={['dataMin - 1000', 'dataMax + 1000']} />
+                              <Tooltip 
+                                contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                                itemStyle={{ color: '#ef4444' }}
+                                labelStyle={{ color: 'rgba(255,255,255,0.4)', fontWeight: 'bold' }}
+                              />
+                              <Area 
+                                type="monotone" 
+                                dataKey="tokens" 
+                                stroke="#ef4444" 
+                                strokeWidth={3}
+                                fillOpacity={1} 
+                                fill={`url(#gradient-${model.id})`} 
+                              />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </div>
+
+                        <div className="lg:col-span-3">
+                          <div className="bg-black/40 rounded-3xl p-4 border border-white/5 space-y-3">
+                            <span className="block text-[10px] text-white/40 font-bold uppercase tracking-widest text-center">Historial Quincenal</span>
+                            <div className="grid grid-cols-2 gap-2">
+                              {history.slice(-4).map((record, i) => (
+                                <div key={i} className="text-center bg-white/5 rounded-xl p-2">
+                                  <div className="text-[9px] text-white/20 font-bold mb-1 truncate">{record.period}</div>
+                                  <div className="text-xs font-mono font-bold">{record.tokens > 1000 ? (record.tokens/1000).toFixed(1) + 'k' : record.tokens}</div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
             </motion.div>
           ) : view === 'model' ? (
@@ -638,13 +921,33 @@ export default function App() {
                   <h2 className="text-3xl font-bold">Gestión del Estudio</h2>
                   <p className="text-white/40">Actualiza los datos y proyecciones para la próxima quincena.</p>
                 </div>
-                <button 
-                  onClick={handleAddModel}
-                  className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-2xl flex items-center gap-2 font-bold transition-all shadow-lg shadow-red-500/20"
-                >
-                  <Plus className="w-5 h-5" />
-                  Añadir Modelo
-                </button>
+                <div className="flex items-center gap-3">
+                  <button 
+                    onClick={() => {
+                      if (window.confirm('¿Estás seguro de reiniciar todo el historial? Esta acción no se puede deshacer.')) {
+                        setModels(prev => prev.map(m => ({ ...m, history: [] })));
+                      }
+                    }}
+                    className="p-3 bg-white/5 hover:bg-red-500/10 hover:text-red-500 border border-white/10 rounded-2xl transition-all"
+                    title="Limpiar Historial"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                  <button 
+                    onClick={() => setShowCloseConfirm(true)}
+                    className="bg-white/5 hover:bg-white/10 border border-white/10 px-6 py-3 rounded-2xl flex items-center gap-2 font-bold transition-all"
+                  >
+                    <Calendar className="w-5 h-5 text-red-500" />
+                    Cerrar Quincena
+                  </button>
+                  <button 
+                    onClick={handleAddModel}
+                    className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-2xl flex items-center gap-2 font-bold transition-all shadow-lg shadow-red-500/20"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Añadir Modelo
+                  </button>
+                </div>
               </div>
 
               <div className="bg-white/5 border border-white/10 rounded-3xl overflow-hidden">
@@ -684,7 +987,7 @@ export default function App() {
                               <Edit2 className="w-4 h-4" />
                             </button>
                             <button 
-                              onClick={() => handleDeleteModel(model.id)}
+                              onClick={() => setModelToDelete(model.id)}
                               className="p-2 hover:bg-red-500/10 rounded-xl transition-all text-red-400/60 hover:text-red-400"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -697,9 +1000,101 @@ export default function App() {
                 </table>
               </div>
 
-              {/* Edit Modal */}
+              {/* Modals */}
               <AnimatePresence>
-                {editingModel && (
+                {showCloseConfirm && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setShowCloseConfirm(false)}
+                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="relative bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl"
+              >
+                <div className="w-16 h-16 bg-red-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                  <Calendar className="w-8 h-8 text-red-500" />
+                </div>
+                <h3 className="text-2xl font-bold text-center mb-4">¿Cerrar Quincena?</h3>
+                <div className="space-y-4 mb-8">
+                  <p className="text-white/40 text-center text-sm">
+                    Se guardarán los tokens actuales en el historial y se reiniciarán los contadores a 0.
+                  </p>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-white/20 uppercase tracking-widest block text-center">Nombre del Periodo</label>
+                    <input 
+                      type="text"
+                      value={closingPeriod}
+                      onChange={(e) => setClosingPeriod(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:border-red-500 transition-all text-center font-bold"
+                      placeholder="Ej: 1-15 Mar 2026"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => setShowCloseConfirm(false)}
+                    className="flex-1 bg-white/5 hover:bg-white/10 py-4 rounded-2xl font-bold transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    onClick={handleCloseFortnight}
+                    className="flex-1 bg-red-600 hover:bg-red-700 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-red-500/20"
+                  >
+                    Confirmar
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
+          {modelToDelete && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setModelToDelete(null)}
+                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              />
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                className="relative bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl"
+              >
+                <div className="w-16 h-16 bg-red-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto">
+                  <Trash2 className="w-8 h-8 text-red-500" />
+                </div>
+                <h3 className="text-2xl font-bold text-center mb-4">¿Eliminar Modelo?</h3>
+                <p className="text-white/40 text-center mb-8">
+                  Esta acción es permanente y no se puede deshacer. Se perderán todos los datos y el historial de la modelo.
+                </p>
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => setModelToDelete(null)}
+                    className="flex-1 bg-white/5 hover:bg-white/10 py-4 rounded-2xl font-bold transition-all"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    onClick={() => handleDeleteModel(modelToDelete)}
+                    className="flex-1 bg-red-600 hover:bg-red-700 py-4 rounded-2xl font-bold transition-all shadow-lg shadow-red-500/20"
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
+          {editingModel && (
                   <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
                     <motion.div 
                       initial={{ opacity: 0 }}
@@ -799,6 +1194,63 @@ export default function App() {
                             onChange={(e) => setEditingModel({...editingModel, challengeGoal: parseInt(e.target.value) || 0})}
                             className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:border-red-500 transition-all font-mono text-yellow-400"
                           />
+                        </div>
+                        <div className="md:col-span-2 space-y-3">
+                          <label className="text-xs font-bold text-white/40 uppercase tracking-widest block">Historial de Quincenas (Tokens)</label>
+                          <div className="space-y-2">
+                            {(editingModel.history || []).map((record, i) => (
+                              <div key={i} className="flex items-center gap-3 bg-white/5 p-2 rounded-xl border border-white/5">
+                                <input 
+                                  type="text" 
+                                  value={record.period}
+                                  onChange={(e) => {
+                                    const newHistory = [...editingModel.history];
+                                    newHistory[i] = { ...newHistory[i], period: e.target.value };
+                                    setEditingModel({...editingModel, history: newHistory});
+                                  }}
+                                  className="flex-1 bg-transparent border-none focus:ring-0 text-[10px] font-bold uppercase text-white/40"
+                                  placeholder="Periodo (ej: 1-15 Abr 2026)"
+                                />
+                                <div className="flex flex-col items-end gap-1">
+                                  <input 
+                                    type="number" 
+                                    value={record.tokens}
+                                    onChange={(e) => {
+                                      const newHistory = [...editingModel.history];
+                                      newHistory[i] = { ...newHistory[i], tokens: parseInt(e.target.value) || 0 };
+                                      setEditingModel({...editingModel, history: newHistory});
+                                    }}
+                                    className="w-24 bg-black/40 border border-white/10 rounded-lg px-2 py-1 focus:outline-none focus:border-red-500 transition-all font-mono text-sm text-right"
+                                  />
+                                  <span className="text-[8px] text-white/20 font-mono">
+                                    {new Date(record.timestamp).toLocaleDateString()}
+                                  </span>
+                                </div>
+                                <button 
+                                  onClick={() => {
+                                    const newHistory = editingModel.history.filter((_, idx) => idx !== i);
+                                    setEditingModel({...editingModel, history: newHistory});
+                                  }}
+                                  className="p-1 hover:text-red-500 transition-colors"
+                                >
+                                  <X className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+                            <button 
+                              onClick={() => {
+                                const newHistory = [...(editingModel.history || []), { 
+                                  period: '', 
+                                  tokens: 0,
+                                  timestamp: Date.now()
+                                }];
+                                setEditingModel({...editingModel, history: newHistory});
+                              }}
+                              className="w-full py-2 border border-dashed border-white/10 rounded-xl text-[10px] font-bold uppercase text-white/20 hover:text-white/40 hover:border-white/20 transition-all"
+                            >
+                              + Agregar Registro Histórico
+                            </button>
+                          </div>
                         </div>
                       </div>
 
