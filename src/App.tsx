@@ -25,7 +25,10 @@ import {
   Edit2,
   BarChart3,
   TrendingDown,
-  Calendar
+  Calendar,
+  LogOut,
+  LogIn,
+  AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -37,8 +40,89 @@ import {
   Tooltip, 
   ResponsiveContainer,
   AreaChart,
-  Area
+  Area,
+  ReferenceLine
 } from 'recharts';
+import { 
+  db, 
+  auth, 
+  signIn, 
+  logOut, 
+  handleFirestoreError, 
+  OperationType 
+} from './firebase';
+import { 
+  collection, 
+  onSnapshot, 
+  doc, 
+  setDoc, 
+  updateDoc, 
+  deleteDoc, 
+  query, 
+  orderBy,
+  writeBatch,
+  getDocFromServer
+} from 'firebase/firestore';
+import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
+
+// Error Boundary Component
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  public static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  public componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error("Uncaught error:", error, errorInfo);
+  }
+
+  public render() {
+    if (this.state.hasError) {
+      let errorMessage = "Algo salió mal.";
+      if (this.state.error instanceof Error) {
+        try {
+          const parsed = JSON.parse(this.state.error.message);
+          if (parsed && parsed.error) errorMessage = `Error de Base de Datos: ${parsed.error}`;
+        } catch (e) {
+          errorMessage = this.state.error.message;
+        }
+      }
+
+      return (
+        <div className="min-h-screen bg-black flex items-center justify-center p-4">
+          <div className="bg-white/5 border border-white/10 rounded-3xl p-8 max-w-md w-full text-center space-y-6">
+            <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto">
+              <AlertCircle className="w-8 h-8 text-red-500" />
+            </div>
+            <h2 className="text-2xl font-bold">¡Ups! Error Crítico</h2>
+            <p className="text-white/60">{errorMessage}</p>
+            <button 
+              onClick={() => window.location.reload()}
+              className="w-full bg-white text-black py-3 rounded-2xl font-bold hover:bg-white/90 transition-all"
+            >
+              Recargar Aplicación
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
 
 // Types
 interface HistoryRecord {
@@ -371,23 +455,12 @@ const LEVEL_ICONS = {
 };
 
 export default function App() {
-  const [models, setModels] = useState<ModelData[]>(() => {
-    const saved = localStorage.getItem('tribu_models_v7');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      // Ensure all models have the history property
-      return parsed.map((m: any) => ({
-        ...m,
-        history: Array.isArray(m.history) 
-          ? m.history.map((h: any) => {
-              if (typeof h === 'number') return { period: 'Anterior', tokens: h, timestamp: Date.now() };
-              return { ...h, timestamp: h.timestamp || Date.now() };
-            })
-          : []
-      }));
-    }
-    return INITIAL_MODELS;
-  });
+  const [user, setUser] = useState<FirebaseUser | null>(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
+  const [models, setModels] = useState<ModelData[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
   const [view, setView] = useState<'dashboard' | 'model' | 'admin' | 'performance'>('dashboard');
   const [editingModel, setEditingModel] = useState<ModelData | null>(null);
@@ -396,70 +469,190 @@ export default function App() {
   const [closingPeriod, setClosingPeriod] = useState('');
   const [modelToDelete, setModelToDelete] = useState<string | null>(null);
 
-  const getPreviousFortnightLabel = () => {
-    // If we have history, suggest the next logical one based on the last record
-    if (models.length > 0 && models[0].history.length > 0) {
-      const history = [...models[0].history].sort((a, b) => a.timestamp - b.timestamp);
-      const last = history[history.length - 1].period;
+  // Auth Listener
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Ensure user document exists
+        const userRef = doc(db, 'users', user.uid);
+        try {
+          const userSnap = await getDocFromServer(userRef);
+          if (!userSnap.exists()) {
+            await setDoc(userRef, {
+              uid: user.uid,
+              email: user.email,
+              displayName: user.displayName,
+              photoURL: user.photoURL,
+              role: 'user', // Default role
+              createdAt: new Date().toISOString()
+            });
+          }
+        } catch (e) {
+          // If it fails due to permissions (e.g. they are already an admin but getDocFromServer fails?)
+          // Actually, if they are new, they can't read their own doc if it doesn't exist? 
+          // No, rules allow read if isOwner(userId).
+          console.error("Error ensuring user document:", e);
+        }
+      }
+      setUser(user);
+      setIsAuthReady(true);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Firestore Sync
+  useEffect(() => {
+    if (!isAuthReady || !user) return;
+
+    const q = query(collection(db, 'models'), orderBy('name', 'asc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const modelsData = snapshot.docs.map(doc => ({
+        ...doc.data(),
+        id: doc.id
+      })) as ModelData[];
       
-      if (last.includes('1-15')) return last.replace('1-15', '16-31');
-      if (last.includes('16-')) {
-        const parts = last.split(' ');
-        const monthMap: {[key: string]: string} = {
-          'ene': 'feb', 'feb': 'mar', 'mar': 'abr', 'abr': 'may', 'may': 'jun',
-          'jun': 'jul', 'jul': 'ago', 'ago': 'sep', 'sep': 'oct', 'oct': 'nov', 'nov': 'dic'
-        };
-        const currentMonth = parts[1].toLowerCase();
-        const nextMonth = monthMap[currentMonth] || 'ene';
-        const nextYear = currentMonth === 'dic' ? parseInt(parts[2]) + 1 : parts[2];
-        return `1-15 ${nextMonth.charAt(0).toUpperCase() + nextMonth.slice(1)} ${nextYear}`;
+      if (modelsData.length === 0 && isLoading) {
+        // Bootstrap initial data if empty
+        bootstrapInitialData();
+      } else {
+        setModels(modelsData);
+        setIsLoading(false);
+        setAuthError(null);
+      }
+    }, (error) => {
+      if (error.message.includes('permission-denied') || error.message.includes('insufficient permissions')) {
+        setAuthError('No tienes permisos para acceder a esta aplicación. Contacta al administrador.');
+        setIsLoading(false);
+      } else {
+        handleFirestoreError(error, OperationType.GET, 'models');
+      }
+    });
+
+    return () => unsubscribe();
+  }, [isAuthReady, user]);
+
+  // Users Sync (Admin only)
+  useEffect(() => {
+    if (!isAuthReady || !user) return;
+
+    // We only try to fetch all users if we suspect we might be an admin
+    // The security rules will block this if not an admin
+    const unsubscribe = onSnapshot(collection(db, 'users'), (snapshot) => {
+      const usersData = snapshot.docs.map(doc => doc.data());
+      setAllUsers(usersData);
+    }, (error) => {
+      // Silently fail if not admin, this is fine
+      console.log("Not an admin or error fetching users:", error.message);
+    });
+
+    return () => unsubscribe();
+  }, [isAuthReady, user]);
+
+  const bootstrapInitialData = async () => {
+    try {
+      const batch = writeBatch(db);
+      INITIAL_MODELS.forEach(model => {
+        const docRef = doc(db, 'models', model.id);
+        batch.set(docRef, model);
+      });
+      await batch.commit();
+      setIsLoading(false);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'models');
+    }
+  };
+
+  const getPeriodLabel = (date: Date, isPrevious: boolean = false) => {
+    const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    let targetDate = new Date(date);
+    
+    if (isPrevious) {
+      if (targetDate.getDate() <= 15) {
+        targetDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), 0);
+      } else {
+        targetDate.setDate(1);
       }
     }
-
-    const targetDate = new Date();
+    
     const day = targetDate.getDate();
+    const month = monthNames[targetDate.getMonth()];
+    const year = targetDate.getFullYear();
     
     if (day <= 15) {
-      targetDate.setDate(0);
-      const tDay = targetDate.getDate();
-      const tMonth = targetDate.toLocaleDateString('es-ES', { month: 'short' }).replace('.', '');
-      const tYear = targetDate.getFullYear();
-      return `16-${tDay} ${tMonth.charAt(0).toUpperCase() + tMonth.slice(1)} ${tYear}`;
+      return `1-15 ${month} ${year}`;
     } else {
-      const tMonth = targetDate.toLocaleDateString('es-ES', { month: 'short' }).replace('.', '');
-      const tYear = targetDate.getFullYear();
-      return `1-15 ${tMonth.charAt(0).toUpperCase() + tMonth.slice(1)} ${tYear}`;
+      const lastDay = new Date(year, targetDate.getMonth() + 1, 0).getDate();
+      return `16-${lastDay} ${month} ${year}`;
     }
+  };
+
+  const getCurrentPeriodLabel = () => getPeriodLabel(new Date());
+  const getPreviousFortnightLabel = () => getPeriodLabel(new Date(), true);
+
+  const calculateTrend = (model: ModelData) => {
+    const history = [...(model.history || [])].sort((a, b) => a.timestamp - b.timestamp);
+    const tokens = history.map(h => h.tokens);
+    
+    // Add current tokens to the sequence if they exist
+    if (model.currentTokens > 0) {
+      tokens.push(model.currentTokens);
+    }
+    
+    // Filter out zero values to focus on active periods
+    const active = tokens.filter(t => t > 0);
+    if (active.length < 2) return 0;
+    
+    const lastValue = active[active.length - 1];
+    
+    // Find the most recent PREVIOUS value that is DIFFERENT from the last one
+    // This allows us to show the "last jump" even if the current value is a 
+    // carry-over or duplicate of the last closed period.
+    let previousValue = lastValue;
+    for (let i = active.length - 2; i >= 0; i--) {
+      if (active[i] !== lastValue) {
+        previousValue = active[i];
+        break;
+      }
+    }
+    
+    // If all values are identical, trend is 0
+    if (previousValue === lastValue) return 0;
+    
+    // Calculate percentage change
+    return ((lastValue - previousValue) / previousValue) * 100;
   };
 
   useEffect(() => {
     setClosingPeriod(getPreviousFortnightLabel());
   }, [models]);
 
-  const handleCloseFortnight = () => {
-    setModels(prev => prev.map(m => {
-      // Calculate a timestamp for the new record that is slightly after the last one
-      const sortedHistory = [...(m.history || [])].sort((a, b) => a.timestamp - b.timestamp);
-      const lastTimestamp = sortedHistory.length > 0 ? sortedHistory[sortedHistory.length - 1].timestamp : Date.now() - 1000;
-      const newTimestamp = Math.max(Date.now(), lastTimestamp + 1000);
+  const handleCloseFortnight = async () => {
+    try {
+      const batch = writeBatch(db);
+      models.forEach(m => {
+        const sortedHistory = [...(m.history || [])].sort((a, b) => a.timestamp - b.timestamp);
+        const lastTimestamp = sortedHistory.length > 0 ? sortedHistory[sortedHistory.length - 1].timestamp : Date.now() - 1000;
+        const newTimestamp = Math.max(Date.now(), lastTimestamp + 1000);
 
-      return {
-        ...m,
-        history: [...(m.history || []), { 
-          period: closingPeriod, 
-          tokens: m.currentTokens,
-          timestamp: newTimestamp
-        }].sort((a, b) => a.timestamp - b.timestamp).slice(-6),
-        currentTokens: 0,
-        lastUpdate: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long' })
-      };
-    }));
-    setShowCloseConfirm(false);
+        const updatedModel = {
+          ...m,
+          history: [...(m.history || []), { 
+            period: closingPeriod, 
+            tokens: m.currentTokens,
+            timestamp: newTimestamp
+          }].sort((a, b) => a.timestamp - b.timestamp).slice(-6),
+          currentTokens: 0,
+          lastUpdate: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long' })
+        };
+        const docRef = doc(db, 'models', m.id);
+        batch.update(docRef, updatedModel);
+      });
+      await batch.commit();
+      setShowCloseConfirm(false);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, 'models');
+    }
   };
-
-  useEffect(() => {
-    localStorage.setItem('tribu_models_v7', JSON.stringify(models));
-  }, [models]);
 
   const filteredModels = models.filter(m => shiftFilter === 'Todos' || m.shift === shiftFilter);
 
@@ -470,34 +663,56 @@ export default function App() {
     setView('model');
   };
 
-  const handleUpdateModel = (updatedModel: ModelData) => {
-    setModels(prev => prev.map(m => m.id === updatedModel.id ? updatedModel : m));
-    setEditingModel(null);
+  const handleUpdateUserRole = async (uid: string, newRole: string) => {
+    try {
+      await updateDoc(doc(db, 'users', uid), { role: newRole });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `users/${uid}`);
+    }
   };
 
-  const handleAddModel = () => {
-    const newModel: ModelData = {
-      id: Date.now().toString(),
-      name: 'Nueva Modelo',
-      level: 'Desarrollo',
-      shift: 'Mañana',
-      currentTokens: 0,
-      baseGoal: 0,
-      challengeGoal: 0,
-      strategicFocus: '',
-      strategyDetails: '',
-      steps: [],
-      lastUpdate: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long' }),
-      history: []
-    };
-    setModels(prev => [...prev, newModel]);
-    setEditingModel(newModel);
+  const handleUpdateModel = async (updatedModel: ModelData) => {
+    try {
+      const docRef = doc(db, 'models', updatedModel.id);
+      await updateDoc(docRef, { ...updatedModel });
+      setEditingModel(null);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `models/${updatedModel.id}`);
+    }
   };
 
-  const handleDeleteModel = (id: string) => {
-    setModels(prev => prev.filter(m => m.id !== id));
-    if (selectedModelId === id) setSelectedModelId(null);
-    setModelToDelete(null);
+  const handleAddModel = async () => {
+    try {
+      const id = Date.now().toString();
+      const newModel: ModelData = {
+        id,
+        name: 'Nueva Modelo',
+        level: 'Desarrollo',
+        shift: 'Mañana',
+        currentTokens: 0,
+        baseGoal: 0,
+        challengeGoal: 0,
+        strategicFocus: '',
+        strategyDetails: '',
+        steps: [],
+        lastUpdate: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long' }),
+        history: []
+      };
+      await setDoc(doc(db, 'models', id), newModel);
+      setEditingModel(newModel);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, 'models');
+    }
+  };
+
+  const handleDeleteModel = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, 'models', id));
+      if (selectedModelId === id) setSelectedModelId(null);
+      setModelToDelete(null);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `models/${id}`);
+    }
   };
 
   const calculateGoals = (tokens: number) => {
@@ -507,49 +722,123 @@ export default function App() {
     };
   };
 
-  return (
-    <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-red-500/30">
-      {/* Header */}
-      <header className="border-b border-white/5 bg-black/40 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('dashboard')}>
-            <div className="w-8 h-8 bg-gradient-to-br from-red-600 to-black rounded-lg flex items-center justify-center shadow-lg shadow-red-500/20">
-              <Target className="w-5 h-5 text-white" />
-            </div>
-            <h1 className="font-bold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">
-              Tribu 1126 Models <span className="text-red-500 text-sm font-medium ml-1">v1.1</span>
-            </h1>
-          </div>
-          
-          <nav className="flex items-center gap-1 bg-white/5 p-1 rounded-full border border-white/10">
-            <button 
-              onClick={() => setView('dashboard')}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${view === 'dashboard' ? 'bg-white text-black' : 'text-white/60 hover:text-white'}`}
-            >
-              Estudio
-            </button>
-            <button 
-              onClick={() => setView('performance')}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${view === 'performance' ? 'bg-white text-black' : 'text-white/60 hover:text-white'}`}
-            >
-              Desempeño
-            </button>
-            <button 
-              disabled={!selectedModelId}
-              onClick={() => setView('model')}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${view === 'model' ? 'bg-white text-black' : 'text-white/60 hover:text-white disabled:opacity-30'}`}
-            >
-              Mi Meta
-            </button>
-            <button 
-              onClick={() => setView('admin')}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${view === 'admin' ? 'bg-white text-black' : 'text-white/60 hover:text-white'}`}
-            >
-              <Settings className="w-4 h-4" />
-            </button>
-          </nav>
+  if (!isAuthReady || (user && isLoading)) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-white/40 font-bold uppercase tracking-widest text-xs">Cargando Tribu...</p>
         </div>
-      </header>
+      </div>
+    );
+  }
+
+  if (user && authError) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white/5 border border-white/10 rounded-[2.5rem] p-10 max-w-md w-full text-center space-y-6 backdrop-blur-xl"
+        >
+          <div className="w-20 h-20 bg-red-500/20 rounded-3xl flex items-center justify-center mx-auto">
+            <AlertCircle className="w-10 h-10 text-red-500" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold tracking-tight">Acceso Denegado</h1>
+            <p className="text-white/40">{authError}</p>
+            <p className="text-xs text-white/20 mt-4">Usuario: {user.email}</p>
+          </div>
+          <button 
+            onClick={logOut}
+            className="w-full bg-white/5 text-white py-4 rounded-2xl font-bold hover:bg-white/10 transition-all"
+          >
+            Cerrar Sesión
+          </button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white/5 border border-white/10 rounded-[2.5rem] p-10 max-w-md w-full text-center space-y-8 backdrop-blur-xl"
+        >
+          <div className="w-20 h-20 bg-gradient-to-br from-red-600 to-black rounded-3xl flex items-center justify-center mx-auto shadow-2xl shadow-red-500/20">
+            <Target className="w-10 h-10 text-white" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-3xl font-bold tracking-tight">Tribu 1126</h1>
+            <p className="text-white/40">Inicia sesión para acceder al panel de control de modelos.</p>
+          </div>
+          <button 
+            onClick={signIn}
+            className="w-full bg-white text-black py-4 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-white/90 transition-all active:scale-95"
+          >
+            <LogIn className="w-5 h-5" />
+            Entrar con Google
+          </button>
+          <p className="text-[10px] text-white/20 uppercase font-bold tracking-widest">Acceso Restringido a Administradores</p>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <ErrorBoundary>
+      <div className="min-h-screen bg-[#050505] text-white font-sans selection:bg-red-500/30">
+        {/* Header */}
+        <header className="border-b border-white/5 bg-black/40 backdrop-blur-xl sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('dashboard')}>
+              <div className="w-8 h-8 bg-gradient-to-br from-red-600 to-black rounded-lg flex items-center justify-center shadow-lg shadow-red-500/20">
+                <Target className="w-5 h-5 text-white" />
+              </div>
+              <h1 className="font-bold text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-white/60">
+                Tribu 1126 Models <span className="text-red-500 text-sm font-medium ml-1">v1.1</span>
+              </h1>
+            </div>
+            
+            <nav className="flex items-center gap-1 bg-white/5 p-1 rounded-full border border-white/10">
+              <button 
+                onClick={() => setView('dashboard')}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${view === 'dashboard' ? 'bg-white text-black' : 'text-white/60 hover:text-white'}`}
+              >
+                Estudio
+              </button>
+              <button 
+                onClick={() => setView('performance')}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${view === 'performance' ? 'bg-white text-black' : 'text-white/60 hover:text-white'}`}
+              >
+                Desempeño
+              </button>
+              <button 
+                disabled={!selectedModelId}
+                onClick={() => setView('model')}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${view === 'model' ? 'bg-white text-black' : 'text-white/60 hover:text-white disabled:opacity-30'}`}
+              >
+                Mi Meta
+              </button>
+              <button 
+                onClick={() => setView('admin')}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${view === 'admin' ? 'bg-white text-black' : 'text-white/60 hover:text-white'}`}
+              >
+                <Settings className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={logOut}
+                className="p-1.5 rounded-full text-white/40 hover:text-red-400 transition-all ml-2"
+                title="Cerrar Sesión"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </nav>
+          </div>
+        </header>
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <AnimatePresence mode="wait">
@@ -566,7 +855,7 @@ export default function App() {
                 <div className="relative z-10 max-w-2xl">
                   <h2 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
                     Estrategia Quincenal <br/>
-                    <span className="text-red-400">Próxima Quincena</span>
+                    <span className="text-red-400">{getCurrentPeriodLabel()}</span>
                   </h2>
                   <p className="text-white/60 text-lg mb-8">
                     Fijamos metas de crecimiento del 15% al 30% para asegurar el progreso continuo y salir de la zona de confort.
@@ -636,13 +925,67 @@ export default function App() {
 
                     <div className="space-y-4">
                       <div className="flex justify-between items-end">
-                        <span className="text-white/40 text-xs uppercase font-bold tracking-widest">Actual</span>
-                        <span className="text-2xl font-mono font-bold">{model.currentTokens.toLocaleString()} <span className="text-xs text-white/40">TK</span></span>
+                        <div className="space-y-1">
+                          <span className="text-white/40 text-xs uppercase font-bold tracking-widest block">Actual</span>
+                          <span className="text-2xl font-mono font-bold">{model.currentTokens.toLocaleString()} <span className="text-xs text-white/40">TK</span></span>
+                        </div>
+                        {model.history && model.history.length > 0 && (() => {
+                          const trend = calculateTrend(model);
+                          return (
+                            <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg bg-white/5 border border-white/5 ${
+                              trend >= 0 ? 'text-emerald-400' : 'text-red-400'
+                            }`}>
+                              {trend >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                              {Math.abs(trend).toFixed(1)}%
+                            </div>
+                          );
+                        })()}
                       </div>
                       
                       <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                        <div className="h-full bg-gradient-to-r from-red-500 to-yellow-400 w-[60%] rounded-full"></div>
+                        <div 
+                          className="h-full bg-gradient-to-r from-red-500 to-yellow-400 rounded-full transition-all duration-1000" 
+                          style={{ width: `${Math.min((model.currentTokens / model.challengeGoal) * 100, 100)}%` }}
+                        ></div>
                       </div>
+
+                      {/* Mini Sparkline */}
+                      {model.history && model.history.length > 0 && (() => {
+                        const currentPeriod = getCurrentPeriodLabel();
+                        const closedHistory = model.history.filter(h => h.period !== currentPeriod)
+                          .sort((a, b) => a.timestamp - b.timestamp);
+                        
+                        // Only include current period in sparkline if it has data
+                        const sparkData = [...closedHistory.map(h => ({ tokens: h.tokens, timestamp: h.timestamp }))];
+                        if (model.currentTokens > 0) {
+                          sparkData.push({ tokens: model.currentTokens, timestamp: Date.now() });
+                        }
+                        
+                        const finalData = sparkData.slice(-5);
+                        if (finalData.length < 2) return null;
+
+                        const trend = calculateTrend(model);
+                        const isUp = trend >= 0;
+                        
+                        return (
+                          <div className="h-12 w-full opacity-50 group-hover:opacity-100 transition-opacity">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <AreaChart data={finalData}>
+                                <Area 
+                                  type="monotone" 
+                                  dataKey="tokens" 
+                                  stroke={isUp ? "#10b981" : "#ef4444"} 
+                                  fill={isUp ? "#10b981" : "#ef4444"} 
+                                  fillOpacity={0.1} 
+                                  strokeWidth={2} 
+                                  dot={false}
+                                  isAnimationActive={false}
+                                />
+                              </AreaChart>
+                            </ResponsiveContainer>
+                          </div>
+                        );
+                      })()}
 
                       <div className="grid grid-cols-2 gap-3 pt-2">
                         <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
@@ -682,15 +1025,31 @@ export default function App() {
 
               <div className="grid grid-cols-1 gap-6">
                 {models.map((model) => {
+                  const currentPeriodLabel = getCurrentPeriodLabel();
                   const history = [...(model.history || [])].sort((a, b) => a.timestamp - b.timestamp);
-                  const data = history.map((record) => ({
-                    name: record.period,
-                    tokens: record.tokens
-                  }));
+                  const historyWithoutCurrent = history.filter(h => h.period !== currentPeriodLabel);
                   
-                  const lastTokens = history.length > 0 ? history[history.length - 1].tokens : 0;
-                  const prevTokens = history.length > 1 ? history[history.length - 2].tokens : 0;
-                  const percentChange = prevTokens > 0 ? ((lastTokens - prevTokens) / prevTokens) * 100 : 0;
+                  // Construct chart data: Only include current period if it has tokens
+                  const chartDataPoints = historyWithoutCurrent.map((record) => ({
+                    name: record.period,
+                    tokens: record.tokens,
+                    timestamp: record.timestamp,
+                    baseGoal: model.baseGoal,
+                    challengeGoal: model.challengeGoal
+                  }));
+
+                  if (model.currentTokens > 0) {
+                    chartDataPoints.push({
+                      name: currentPeriodLabel,
+                      tokens: model.currentTokens,
+                      timestamp: Date.now(),
+                      baseGoal: model.baseGoal,
+                      challengeGoal: model.challengeGoal
+                    });
+                  }
+
+                  const chartData = chartDataPoints.sort((a, b) => a.timestamp - b.timestamp).slice(-5);
+                  const percentChange = calculateTrend(model);
 
                   return (
                     <motion.div
@@ -714,7 +1073,7 @@ export default function App() {
                           <div className="grid grid-cols-2 gap-4">
                             <div className="bg-black/40 rounded-2xl p-3 border border-white/5">
                               <span className="block text-[10px] text-white/40 font-bold uppercase mb-1">Actual</span>
-                              <span className="text-lg font-mono font-bold">{lastTokens.toLocaleString()}</span>
+                              <span className="text-lg font-mono font-bold">{model.currentTokens.toLocaleString()}</span>
                             </div>
                             <div className="bg-black/40 rounded-2xl p-3 border border-white/5">
                               <span className="block text-[10px] text-white/40 font-bold uppercase mb-1">Tendencia</span>
@@ -726,39 +1085,61 @@ export default function App() {
                           </div>
                         </div>
 
-                        <div className="lg:col-span-6 h-[150px] w-full">
+                        <div className="lg:col-span-6 h-[180px] w-full relative">
+                          <div className="absolute top-0 right-0 flex gap-4 text-[9px] font-bold uppercase tracking-tighter z-10">
+                            <div className="flex items-center gap-1 text-emerald-400/60">
+                              <div className="w-2 h-0.5 bg-emerald-400/40"></div>
+                              Meta Base
+                            </div>
+                            <div className="flex items-center gap-1 text-yellow-400/60">
+                              <div className="w-2 h-0.5 bg-yellow-400/40"></div>
+                              Meta Reto
+                            </div>
+                          </div>
                           <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={data}>
+                            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                               <defs>
                                 <linearGradient id={`gradient-${model.id}`} x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3}/>
+                                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.4}/>
                                   <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
                                 </linearGradient>
                               </defs>
                               <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" vertical={false} />
                               <XAxis 
                                 dataKey="name" 
-                                stroke="#ffffff20"
-                                fontSize={10}
+                                stroke="#ffffff10"
+                                fontSize={9}
                                 tickLine={false}
                                 axisLine={false}
                                 interval={0}
-                                tick={{ fill: 'rgba(255,255,255,0.4)', fontWeight: 'bold' }}
+                                tick={{ fill: 'rgba(255,255,255,0.3)', fontWeight: 'bold' }}
+                                dy={10}
                               />
-                              <YAxis hide domain={['dataMin - 1000', 'dataMax + 1000']} />
+                              <YAxis hide domain={[0, (max: number) => Math.max(max * 1.1, model.challengeGoal * 1.1)]} />
                               <Tooltip 
-                                contentStyle={{ backgroundColor: '#0a0a0a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                                itemStyle={{ color: '#ef4444' }}
-                                labelStyle={{ color: 'rgba(255,255,255,0.4)', fontWeight: 'bold' }}
+                                contentStyle={{ 
+                                  backgroundColor: '#0a0a0a', 
+                                  border: '1px solid rgba(255,255,255,0.1)', 
+                                  borderRadius: '16px',
+                                  boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)'
+                                }}
+                                itemStyle={{ color: '#ef4444', fontWeight: 'bold' }}
+                                labelStyle={{ color: 'rgba(255,255,255,0.4)', fontWeight: 'bold', marginBottom: '4px' }}
+                                formatter={(value: number) => [value.toLocaleString() + ' TK', 'Tokens']}
                               />
                               <Area 
                                 type="monotone" 
                                 dataKey="tokens" 
                                 stroke="#ef4444" 
-                                strokeWidth={3}
+                                strokeWidth={4}
                                 fillOpacity={1} 
-                                fill={`url(#gradient-${model.id})`} 
+                                fill={`url(#gradient-${model.id})`}
+                                dot={{ r: 4, fill: '#ef4444', strokeWidth: 2, stroke: '#0a0a0a' }}
+                                activeDot={{ r: 6, fill: '#fff', strokeWidth: 0 }}
+                                animationDuration={1500}
                               />
+                              <ReferenceLine y={model.baseGoal} stroke="#10b981" strokeDasharray="5 5" strokeOpacity={0.3} />
+                              <ReferenceLine y={model.challengeGoal} stroke="#fbbf24" strokeDasharray="5 5" strokeOpacity={0.3} />
                             </AreaChart>
                           </ResponsiveContainer>
                         </div>
@@ -901,6 +1282,54 @@ export default function App() {
                 </div>
               </div>
 
+              {/* User Management Section */}
+              <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8">
+                <div className="flex items-center gap-4 mb-8">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center">
+                    <User className="w-6 h-6 text-emerald-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold">Gestión de Usuarios</h3>
+                    <p className="text-white/40 text-sm">Controla quién tiene acceso de administrador al panel.</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {allUsers.map((u) => (
+                    <div key={u.uid} className="bg-black/40 border border-white/5 rounded-2xl p-4 flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        {u.photoURL ? (
+                          <img src={u.photoURL} alt={u.displayName} className="w-10 h-10 rounded-xl" referrerPolicy="no-referrer" />
+                        ) : (
+                          <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-bold">
+                            {u.displayName?.charAt(0) || u.email?.charAt(0)}
+                          </div>
+                        )}
+                        <div className="overflow-hidden">
+                          <div className="font-bold text-sm truncate">{u.displayName || 'Usuario'}</div>
+                          <div className="text-[10px] text-white/40 truncate">{u.email}</div>
+                        </div>
+                      </div>
+                      
+                      <select 
+                        value={u.role}
+                        onChange={(e) => handleUpdateUserRole(u.uid, e.target.value)}
+                        className="bg-white/5 border border-white/10 rounded-xl px-2 py-1 text-[10px] font-bold outline-none focus:border-red-500/50 transition-all"
+                      >
+                        <option value="user" className="bg-[#0a0a0a]">Usuario</option>
+                        <option value="admin" className="bg-[#0a0a0a]">Admin</option>
+                      </select>
+                    </div>
+                  ))}
+                </div>
+                
+                {allUsers.length === 0 && (
+                  <div className="text-center py-8 text-white/20 text-sm">
+                    No hay otros usuarios registrados aún.
+                  </div>
+                )}
+              </div>
+
               {/* Motivational Quote */}
               <div className="text-center py-12">
                 <p className="text-white/20 text-sm italic">
@@ -923,9 +1352,18 @@ export default function App() {
                 </div>
                 <div className="flex items-center gap-3">
                   <button 
-                    onClick={() => {
-                      if (window.confirm('¿Estás seguro de reiniciar todo el historial? Esta acción no se puede deshacer.')) {
-                        setModels(prev => prev.map(m => ({ ...m, history: [] })));
+                    onClick={async () => {
+                      if (confirm('¿Estás seguro de reiniciar todo el historial? Esta acción no se puede deshacer.')) {
+                        try {
+                          const batch = writeBatch(db);
+                          models.forEach(m => {
+                            const docRef = doc(db, 'models', m.id);
+                            batch.update(docRef, { history: [] });
+                          });
+                          await batch.commit();
+                        } catch (error) {
+                          handleFirestoreError(error, OperationType.UPDATE, 'models');
+                        }
                       }
                     }}
                     className="p-3 bg-white/5 hover:bg-red-500/10 hover:text-red-500 border border-white/10 rounded-2xl transition-all"
@@ -1314,5 +1752,6 @@ export default function App() {
         </div>
       </footer>
     </div>
+    </ErrorBoundary>
   );
 }

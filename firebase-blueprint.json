@@ -1,0 +1,40 @@
+{
+  "entities": {
+    "Model": {
+      "title": "Model",
+      "description": "A model's performance data and strategy.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "level": { "type": "string", "enum": ["Elite", "Avanzado", "Desarrollo"] },
+        "shift": { "type": "string", "enum": ["Mañana", "Tarde", "Noche"] },
+        "currentTokens": { "type": "number" },
+        "baseGoal": { "type": "number" },
+        "challengeGoal": { "type": "number" },
+        "strategicFocus": { "type": "string" },
+        "strategyDetails": { "type": "string" },
+        "steps": { "type": "array", "items": { "type": "string" } },
+        "lastUpdate": { "type": "string" },
+        "history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "period": { "type": "string" },
+              "tokens": { "type": "number" },
+              "timestamp": { "type": "number" }
+            }
+          }
+        }
+      },
+      "required": ["id", "name", "level", "shift", "currentTokens", "baseGoal", "challengeGoal"]
+    }
+  },
+  "firestore": {
+    "/models/{modelId}": {
+      "schema": "Model",
+      "description": "Collection of models and their data."
+    }
+  }
+}
