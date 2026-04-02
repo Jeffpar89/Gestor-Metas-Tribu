@@ -1,68 +1,13 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // ===============================================================
-    // Assumed Data Model
-    // ===============================================================
-    //
-    // Collection: models
-    // Document ID: {modelId}
-    // Fields:
-    //   - id: string (required)
-    //   - name: string (required)
-    //   - level: string (Elite, Avanzado, Desarrollo) (required)
-    //   - shift: string (Mañana, Tarde, Noche) (required)
-    //   - currentTokens: number (required)
-    //   - baseGoal: number (required)
-    //   - challengeGoal: number (required)
-    //   - strategicFocus: string
-    //   - strategyDetails: string
-    //   - steps: list of strings
-    //   - lastUpdate: string
-    //   - history: list of objects {period: string, tokens: number, timestamp: number}
-    //
-    // ===============================================================
-
-    // ===============================================================
-    // Helper Functions
-    // ===============================================================
-    
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-
-    function isAdmin() {
-      return isAuthenticated() &&
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-          (request.auth.token.email == "jeffpar68@gmail.com" && request.auth.token.email_verified == true));
-    }
-
-    function isValidModel(data) {
-      return data.keys().hasAll(['id', 'name', 'level', 'shift', 'currentTokens', 'baseGoal', 'challengeGoal']) &&
-             data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
-             data.level in ['Elite', 'Avanzado', 'Desarrollo'] &&
-             data.shift in ['Mañana', 'Tarde', 'Noche'] &&
-             data.currentTokens is number &&
-             data.baseGoal is number &&
-             data.challengeGoal is number;
-    }
-
-    // ===============================================================
-    // Rules
-    // ===============================================================
-
     match /models/{modelId} {
-      // Only admins can read, create, update, or delete models
-      allow read, delete: if isAdmin();
-      allow create, update: if isAdmin() && isValidModel(request.resource.data);
+      allow read, write: if true;
     }
-
-    match /users/{userId} {
-      allow read: if isAuthenticated() && request.auth.uid == userId;
-      // Only the default admin can create other admins
-      allow create, update: if isAdmin() && 
-                             request.resource.data.keys().hasOnly(['role', 'email']) &&
-                             request.resource.data.role in ['admin', 'user'];
+    
+    // Default deny for everything else
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }

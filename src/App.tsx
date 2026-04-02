@@ -45,9 +45,6 @@ import {
 } from 'recharts';
 import { 
   db, 
-  auth, 
-  signIn, 
-  logOut, 
   handleFirestoreError, 
   OperationType 
 } from './firebase';
@@ -63,7 +60,6 @@ import {
   writeBatch,
   getDocFromServer
 } from 'firebase/firestore';
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 
 // Error Boundary Component
 interface ErrorBoundaryProps {
@@ -455,12 +451,8 @@ const LEVEL_ICONS = {
 };
 
 export default function App() {
-  const [user, setUser] = useState<FirebaseUser | null>(null);
-  const [isAuthReady, setIsAuthReady] = useState(false);
   const [models, setModels] = useState<ModelData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [authError, setAuthError] = useState<string | null>(null);
-  const [allUsers, setAllUsers] = useState<any[]>([]);
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
   const [view, setView] = useState<'dashboard' | 'model' | 'admin' | 'performance'>('dashboard');
   const [editingModel, setEditingModel] = useState<ModelData | null>(null);
@@ -469,41 +461,8 @@ export default function App() {
   const [closingPeriod, setClosingPeriod] = useState('');
   const [modelToDelete, setModelToDelete] = useState<string | null>(null);
 
-  // Auth Listener
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // Ensure user document exists
-        const userRef = doc(db, 'users', user.uid);
-        try {
-          const userSnap = await getDocFromServer(userRef);
-          if (!userSnap.exists()) {
-            await setDoc(userRef, {
-              uid: user.uid,
-              email: user.email,
-              displayName: user.displayName,
-              photoURL: user.photoURL,
-              role: 'user', // Default role
-              createdAt: new Date().toISOString()
-            });
-          }
-        } catch (e) {
-          // If it fails due to permissions (e.g. they are already an admin but getDocFromServer fails?)
-          // Actually, if they are new, they can't read their own doc if it doesn't exist? 
-          // No, rules allow read if isOwner(userId).
-          console.error("Error ensuring user document:", e);
-        }
-      }
-      setUser(user);
-      setIsAuthReady(true);
-    });
-    return () => unsubscribe();
-  }, []);
-
   // Firestore Sync
   useEffect(() => {
-    if (!isAuthReady || !user) return;
-
     const q = query(collection(db, 'models'), orderBy('name', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const modelsData = snapshot.docs.map(doc => ({
@@ -517,36 +476,13 @@ export default function App() {
       } else {
         setModels(modelsData);
         setIsLoading(false);
-        setAuthError(null);
       }
     }, (error) => {
-      if (error.message.includes('permission-denied') || error.message.includes('insufficient permissions')) {
-        setAuthError('No tienes permisos para acceder a esta aplicación. Contacta al administrador.');
-        setIsLoading(false);
-      } else {
-        handleFirestoreError(error, OperationType.GET, 'models');
-      }
+      handleFirestoreError(error, OperationType.GET, 'models');
     });
 
     return () => unsubscribe();
-  }, [isAuthReady, user]);
-
-  // Users Sync (Admin only)
-  useEffect(() => {
-    if (!isAuthReady || !user) return;
-
-    // We only try to fetch all users if we suspect we might be an admin
-    // The security rules will block this if not an admin
-    const unsubscribe = onSnapshot(collection(db, 'users'), (snapshot) => {
-      const usersData = snapshot.docs.map(doc => doc.data());
-      setAllUsers(usersData);
-    }, (error) => {
-      // Silently fail if not admin, this is fine
-      console.log("Not an admin or error fetching users:", error.message);
-    });
-
-    return () => unsubscribe();
-  }, [isAuthReady, user]);
+  }, []);
 
   const bootstrapInitialData = async () => {
     try {
@@ -663,14 +599,6 @@ export default function App() {
     setView('model');
   };
 
-  const handleUpdateUserRole = async (uid: string, newRole: string) => {
-    try {
-      await updateDoc(doc(db, 'users', uid), { role: newRole });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.UPDATE, `users/${uid}`);
-    }
-  };
-
   const handleUpdateModel = async (updatedModel: ModelData) => {
     try {
       const docRef = doc(db, 'models', updatedModel.id);
@@ -722,68 +650,13 @@ export default function App() {
     };
   };
 
-  if (!isAuthReady || (user && isLoading)) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
           <p className="text-white/40 font-bold uppercase tracking-widest text-xs">Cargando Tribu...</p>
         </div>
-      </div>
-    );
-  }
-
-  if (user && authError) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white/5 border border-white/10 rounded-[2.5rem] p-10 max-w-md w-full text-center space-y-6 backdrop-blur-xl"
-        >
-          <div className="w-20 h-20 bg-red-500/20 rounded-3xl flex items-center justify-center mx-auto">
-            <AlertCircle className="w-10 h-10 text-red-500" />
-          </div>
-          <div className="space-y-2">
-            <h1 className="text-2xl font-bold tracking-tight">Acceso Denegado</h1>
-            <p className="text-white/40">{authError}</p>
-            <p className="text-xs text-white/20 mt-4">Usuario: {user.email}</p>
-          </div>
-          <button 
-            onClick={logOut}
-            className="w-full bg-white/5 text-white py-4 rounded-2xl font-bold hover:bg-white/10 transition-all"
-          >
-            Cerrar Sesión
-          </button>
-        </motion.div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white/5 border border-white/10 rounded-[2.5rem] p-10 max-w-md w-full text-center space-y-8 backdrop-blur-xl"
-        >
-          <div className="w-20 h-20 bg-gradient-to-br from-red-600 to-black rounded-3xl flex items-center justify-center mx-auto shadow-2xl shadow-red-500/20">
-            <Target className="w-10 h-10 text-white" />
-          </div>
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold tracking-tight">Tribu 1126</h1>
-            <p className="text-white/40">Inicia sesión para acceder al panel de control de modelos.</p>
-          </div>
-          <button 
-            onClick={signIn}
-            className="w-full bg-white text-black py-4 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-white/90 transition-all active:scale-95"
-          >
-            <LogIn className="w-5 h-5" />
-            Entrar con Google
-          </button>
-          <p className="text-[10px] text-white/20 uppercase font-bold tracking-widest">Acceso Restringido a Administradores</p>
-        </motion.div>
       </div>
     );
   }
@@ -828,13 +701,6 @@ export default function App() {
                 className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${view === 'admin' ? 'bg-white text-black' : 'text-white/60 hover:text-white'}`}
               >
                 <Settings className="w-4 h-4" />
-              </button>
-              <button 
-                onClick={logOut}
-                className="p-1.5 rounded-full text-white/40 hover:text-red-400 transition-all ml-2"
-                title="Cerrar Sesión"
-              >
-                <LogOut className="w-4 h-4" />
               </button>
             </nav>
           </div>
@@ -1280,54 +1146,6 @@ export default function App() {
                     </div>
                   </div>
                 </div>
-              </div>
-
-              {/* User Management Section */}
-              <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8">
-                <div className="flex items-center gap-4 mb-8">
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center">
-                    <User className="w-6 h-6 text-emerald-400" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold">Gestión de Usuarios</h3>
-                    <p className="text-white/40 text-sm">Controla quién tiene acceso de administrador al panel.</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {allUsers.map((u) => (
-                    <div key={u.uid} className="bg-black/40 border border-white/5 rounded-2xl p-4 flex items-center justify-between gap-4">
-                      <div className="flex items-center gap-3 overflow-hidden">
-                        {u.photoURL ? (
-                          <img src={u.photoURL} alt={u.displayName} className="w-10 h-10 rounded-xl" referrerPolicy="no-referrer" />
-                        ) : (
-                          <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-bold">
-                            {u.displayName?.charAt(0) || u.email?.charAt(0)}
-                          </div>
-                        )}
-                        <div className="overflow-hidden">
-                          <div className="font-bold text-sm truncate">{u.displayName || 'Usuario'}</div>
-                          <div className="text-[10px] text-white/40 truncate">{u.email}</div>
-                        </div>
-                      </div>
-                      
-                      <select 
-                        value={u.role}
-                        onChange={(e) => handleUpdateUserRole(u.uid, e.target.value)}
-                        className="bg-white/5 border border-white/10 rounded-xl px-2 py-1 text-[10px] font-bold outline-none focus:border-red-500/50 transition-all"
-                      >
-                        <option value="user" className="bg-[#0a0a0a]">Usuario</option>
-                        <option value="admin" className="bg-[#0a0a0a]">Admin</option>
-                      </select>
-                    </div>
-                  ))}
-                </div>
-                
-                {allUsers.length === 0 && (
-                  <div className="text-center py-8 text-white/20 text-sm">
-                    No hay otros usuarios registrados aún.
-                  </div>
-                )}
               </div>
 
               {/* Motivational Quote */}
