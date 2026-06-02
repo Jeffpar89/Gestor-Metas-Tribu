@@ -683,6 +683,9 @@ export default function App() {
       const lastTimestamp = sortedHistory.length > 0 ? sortedHistory[sortedHistory.length - 1].timestamp : Date.now() - 1000;
       const newTimestamp = Math.max(Date.now(), lastTimestamp + 1000);
 
+      // Calculamos las metas correspondientes basadas en los tokens que se acaban de cerrar
+      const nextGoals = calculateGoals(m.currentTokens);
+
       return {
         ...m,
         history: [...(m.history || []), { 
@@ -693,6 +696,8 @@ export default function App() {
           stripchat: m.stripchat ? { ...m.stripchat } : undefined
         }].sort((a, b) => a.timestamp - b.timestamp).slice(-6),
         currentTokens: 0,
+        baseGoal: nextGoals.base,
+        challengeGoal: nextGoals.challenge,
         lastUpdate: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long' })
       };
     });
@@ -1882,17 +1887,50 @@ export default function App() {
                             value={editingModel.currentTokens}
                             onChange={(e) => {
                               const val = parseInt(e.target.value) || 0;
-                              const goals = calculateGoals(val);
-                              setEditingModel({
-                                ...editingModel, 
-                                currentTokens: val,
-                                baseGoal: goals.base,
-                                challengeGoal: goals.challenge
-                              });
+                              const hasHistory = (editingModel.history || []).length > 0;
+                              if (hasHistory) {
+                                // Keep existing goals as they are based on previous closed period
+                                setEditingModel({
+                                  ...editingModel, 
+                                  currentTokens: val
+                                });
+                              } else {
+                                // No history yet, calculate base/challenge goals dynamically from current tokens value
+                                const goals = calculateGoals(val);
+                                setEditingModel({
+                                  ...editingModel, 
+                                  currentTokens: val,
+                                  baseGoal: goals.base,
+                                  challengeGoal: goals.challenge
+                                });
+                              }
                             }}
                             className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:border-red-500 transition-all font-mono"
                           />
                         </div>
+
+                        {(editingModel.history || []).length > 0 && (
+                          <div className="md:col-span-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const sortedHistory = [...(editingModel.history || [])].sort((a, b) => b.timestamp - a.timestamp);
+                                if (sortedHistory.length > 0) {
+                                  const lastClosedTokens = sortedHistory[0].tokens;
+                                  const goals = calculateGoals(lastClosedTokens);
+                                  setEditingModel({
+                                    ...editingModel,
+                                    baseGoal: goals.base,
+                                    challengeGoal: goals.challenge
+                                  });
+                                }
+                              }}
+                              className="w-full bg-red-500/10 hover:bg-red-500/20 text-red-400 py-3.5 rounded-2xl text-xs font-bold uppercase tracking-wider border border-red-500/20 transition-all cursor-pointer"
+                            >
+                              Sugerir Metas según Cierre Anterior ({(editingModel.history || []).sort((a, b) => b.timestamp - a.timestamp)[0].tokens.toLocaleString()} TK)
+                            </button>
+                          </div>
+                        )}
                         <div className="space-y-2">
                           <label className="text-xs font-bold text-white/40 uppercase tracking-widest">Fecha Actualización</label>
                           <input 
