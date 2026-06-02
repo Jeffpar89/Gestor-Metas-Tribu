@@ -1,5 +1,17 @@
 {
   "entities": {
+    "PlatformMetrics": {
+      "title": "PlatformMetrics",
+      "description": "Metrics specific to Chaturbate or Stripchat platforms.",
+      "type": "object",
+      "properties": {
+        "hoursOnline": { "type": "number" },
+        "usersInRoom": { "type": "number" },
+        "followersGained": { "type": "number" },
+        "fanClubMembers": { "type": "number" },
+        "scoreRanking": { "type": "number" }
+      }
+    },
     "Model": {
       "title": "Model",
       "description": "A model's performance data and strategy.",
@@ -16,6 +28,8 @@
         "strategyDetails": { "type": "string" },
         "steps": { "type": "array", "items": { "type": "string" } },
         "lastUpdate": { "type": "string" },
+        "chaturbate": { "$ref": "PlatformMetrics" },
+        "stripchat": { "$ref": "PlatformMetrics" },
         "history": {
           "type": "array",
           "items": {
@@ -23,7 +37,9 @@
             "properties": {
               "period": { "type": "string" },
               "tokens": { "type": "number" },
-              "timestamp": { "type": "number" }
+              "timestamp": { "type": "number" },
+              "chaturbate": { "$ref": "PlatformMetrics" },
+              "stripchat": { "$ref": "PlatformMetrics" }
             }
           }
         }

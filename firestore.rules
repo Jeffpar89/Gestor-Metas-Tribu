@@ -1,13 +1,9 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Public access rule for models collection to allow reading and writing metrics
     match /models/{modelId} {
       allow read, write: if true;
-    }
-    
-    // Default deny for everything else
-    match /{document=**} {
-      allow read, write: if false;
     }
   }
 }

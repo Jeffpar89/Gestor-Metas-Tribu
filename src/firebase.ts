@@ -1,10 +1,26 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy, getDocFromServer, writeBatch } from 'firebase/firestore';
-import firebaseConfig from '../firebase-applet-config.json';
+import firebaseAppletConfig from '../firebase-applet-config.json';
+
+// Configuration from environment variables with safe fallback to the default applet configuration
+const metaEnv = (import.meta as any).env || {};
+
+const config = {
+  apiKey: metaEnv.VITE_FIREBASE_API_KEY || firebaseAppletConfig.apiKey,
+  authDomain: metaEnv.VITE_FIREBASE_AUTH_DOMAIN || firebaseAppletConfig.authDomain,
+  projectId: metaEnv.VITE_FIREBASE_PROJECT_ID || firebaseAppletConfig.projectId,
+  storageBucket: metaEnv.VITE_FIREBASE_STORAGE_BUCKET || firebaseAppletConfig.storageBucket,
+  messagingSenderId: metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || firebaseAppletConfig.messagingSenderId,
+  appId: metaEnv.VITE_FIREBASE_APP_ID || firebaseAppletConfig.appId,
+  measurementId: metaEnv.VITE_FIREBASE_MEASUREMENT_ID || (firebaseAppletConfig as any).measurementId,
+};
+
+const dbId = metaEnv.VITE_FIREBASE_DATABASE_ID || (firebaseAppletConfig as any).firestoreDatabaseId;
 
 // Initialize Firebase SDK
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+console.log("Firebase: Initializing with project ID:", config.projectId);
+const app = initializeApp(config);
+export const db = (dbId && dbId !== '(default)') ? getFirestore(app, dbId) : getFirestore(app);
 
 export enum OperationType {
   CREATE = 'create',

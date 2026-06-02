@@ -11,6 +11,8 @@ import {
   User, 
   LayoutDashboard, 
   ChevronRight, 
+  ChevronDown,
+  ChevronUp,
   Star, 
   Award, 
   Flame,
@@ -28,7 +30,12 @@ import {
   Calendar,
   LogOut,
   LogIn,
-  AlertCircle
+  AlertCircle,
+  Clock,
+  Users,
+  Crown,
+  Trophy,
+  Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
@@ -125,6 +132,16 @@ interface HistoryRecord {
   period: string;
   tokens: number;
   timestamp: number;
+  chaturbate?: PlatformMetrics;
+  stripchat?: PlatformMetrics;
+}
+
+interface PlatformMetrics {
+  hoursOnline: number;
+  usersInRoom: number;
+  followersGained: number;
+  fanClubMembers: number;
+  scoreRanking: number;
 }
 
 interface ModelData {
@@ -140,7 +157,10 @@ interface ModelData {
   steps: string[];
   lastUpdate: string;
   history: HistoryRecord[]; // Last fortnights
+  chaturbate?: PlatformMetrics;
+  stripchat?: PlatformMetrics;
 }
+
 
 // Initial Data
 const INITIAL_MODELS: ModelData[] = [
@@ -161,9 +181,35 @@ const INITIAL_MODELS: ModelData[] = [
     ],
     lastUpdate: '15 de Marzo',
     history: [
-      { period: '1-15 Feb 2026', tokens: 38500, timestamp: new Date(2026, 1, 1).getTime() },
-      { period: '16-28 Feb 2026', tokens: 40100, timestamp: new Date(2026, 1, 16).getTime() }
-    ]
+      { 
+        period: '1-15 Feb 2026', 
+        tokens: 38500, 
+        timestamp: new Date(2026, 1, 1).getTime(),
+        chaturbate: { hoursOnline: 110, usersInRoom: 410, followersGained: 1050, fanClubMembers: 75, scoreRanking: 5 },
+        stripchat: { hoursOnline: 75, usersInRoom: 320, followersGained: 850, fanClubMembers: 40, scoreRanking: 14 }
+      },
+      { 
+        period: '16-28 Feb 2026', 
+        tokens: 40100, 
+        timestamp: new Date(2026, 1, 16).getTime(),
+        chaturbate: { hoursOnline: 115, usersInRoom: 430, followersGained: 1120, fanClubMembers: 80, scoreRanking: 4 },
+        stripchat: { hoursOnline: 78, usersInRoom: 340, followersGained: 900, fanClubMembers: 42, scoreRanking: 13 }
+      }
+    ],
+    chaturbate: {
+      hoursOnline: 120,
+      usersInRoom: 450,
+      followersGained: 1200,
+      fanClubMembers: 85,
+      scoreRanking: 4
+    },
+    stripchat: {
+      hoursOnline: 80,
+      usersInRoom: 350,
+      followersGained: 950,
+      fanClubMembers: 45,
+      scoreRanking: 12
+    }
   },
   {
     id: '2',
@@ -181,9 +227,35 @@ const INITIAL_MODELS: ModelData[] = [
     ],
     lastUpdate: '15 de Marzo',
     history: [
-      { period: '1-15 Feb 2026', tokens: 24500, timestamp: new Date(2026, 1, 1).getTime() },
-      { period: '16-28 Feb 2026', tokens: 25800, timestamp: new Date(2026, 1, 16).getTime() }
-    ]
+      { 
+        period: '1-15 Feb 2026', 
+        tokens: 24500, 
+        timestamp: new Date(2026, 1, 1).getTime(),
+        chaturbate: { hoursOnline: 90, usersInRoom: 290, followersGained: 800, fanClubMembers: 45, scoreRanking: 9 },
+        stripchat: { hoursOnline: 85, usersInRoom: 260, followersGained: 680, fanClubMembers: 35, scoreRanking: 16 }
+      },
+      { 
+        period: '16-28 Feb 2026', 
+        tokens: 25800, 
+        timestamp: new Date(2026, 1, 16).getTime(),
+        chaturbate: { hoursOnline: 92, usersInRoom: 300, followersGained: 830, fanClubMembers: 48, scoreRanking: 8 },
+        stripchat: { hoursOnline: 88, usersInRoom: 270, followersGained: 700, fanClubMembers: 36, scoreRanking: 15 }
+      }
+    ],
+    chaturbate: {
+      hoursOnline: 95,
+      usersInRoom: 310,
+      followersGained: 850,
+      fanClubMembers: 50,
+      scoreRanking: 8
+    },
+    stripchat: {
+      hoursOnline: 90,
+      usersInRoom: 280,
+      followersGained: 720,
+      fanClubMembers: 38,
+      scoreRanking: 15
+    }
   },
   {
     id: '3',
@@ -201,9 +273,35 @@ const INITIAL_MODELS: ModelData[] = [
     ],
     lastUpdate: '15 de Marzo',
     history: [
-      { period: '1-15 Feb 2026', tokens: 22000, timestamp: new Date(2026, 1, 1).getTime() },
-      { period: '16-28 Feb 2026', tokens: 23500, timestamp: new Date(2026, 1, 16).getTime() }
-    ]
+      { 
+        period: '1-15 Feb 2026', 
+        tokens: 22000, 
+        timestamp: new Date(2026, 1, 1).getTime(),
+        chaturbate: { hoursOnline: 105, usersInRoom: 480, followersGained: 1250, fanClubMembers: 80, scoreRanking: 4 },
+        stripchat: { hoursOnline: 60, usersInRoom: 210, followersGained: 480, fanClubMembers: 18, scoreRanking: 30 }
+      },
+      { 
+        period: '16-28 Feb 2026', 
+        tokens: 23500, 
+        timestamp: new Date(2026, 1, 16).getTime(),
+        chaturbate: { hoursOnline: 108, usersInRoom: 500, followersGained: 1320, fanClubMembers: 90, scoreRanking: 3 },
+        stripchat: { hoursOnline: 62, usersInRoom: 230, followersGained: 500, fanClubMembers: 19, scoreRanking: 29 }
+      }
+    ],
+    chaturbate: {
+      hoursOnline: 110,
+      usersInRoom: 520,
+      followersGained: 1400,
+      fanClubMembers: 95,
+      scoreRanking: 3
+    },
+    stripchat: {
+      hoursOnline: 65,
+      usersInRoom: 240,
+      followersGained: 510,
+      fanClubMembers: 20,
+      scoreRanking: 28
+    }
   },
   {
     id: '4',
@@ -453,6 +551,7 @@ const LEVEL_ICONS = {
 export default function App() {
   const [models, setModels] = useState<ModelData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadingError, setLoadingError] = useState<string | null>(null);
   const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
   const [view, setView] = useState<'dashboard' | 'model' | 'admin' | 'performance'>('dashboard');
   const [editingModel, setEditingModel] = useState<ModelData | null>(null);
@@ -460,40 +559,56 @@ export default function App() {
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [closingPeriod, setClosingPeriod] = useState('');
   const [modelToDelete, setModelToDelete] = useState<string | null>(null);
+  const [expandedPeriodsModelId, setExpandedPeriodsModelId] = useState<string | null>(null);
 
   // Firestore Sync
   useEffect(() => {
+    console.log("Firestore: Starting sync...");
+    const timeout = setTimeout(() => {
+      if (isLoading) {
+        setLoadingError("La base de datos está tardando demasiado en responder. Verifica que Firestore esté habilitado en tu consola de Firebase y que las reglas permitan acceso público.");
+      }
+    }, 10000);
+
     const q = query(collection(db, 'models'), orderBy('name', 'asc'));
     const unsubscribe = onSnapshot(q, (snapshot) => {
+      clearTimeout(timeout);
+      console.log("Firestore: Snapshot received, docs:", snapshot.size);
       const modelsData = snapshot.docs.map(doc => ({
         ...doc.data(),
         id: doc.id
       })) as ModelData[];
       
-      if (modelsData.length === 0 && isLoading) {
-        // Bootstrap initial data if empty
-        bootstrapInitialData();
-      } else {
-        setModels(modelsData);
-        setIsLoading(false);
-      }
+      setModels(modelsData);
+      setIsLoading(false);
+      setLoadingError(null);
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'models');
+      clearTimeout(timeout);
+      console.error("Firestore Error in onSnapshot:", error);
+      // Stop loading state and let the user see the interface instead of being blocked
+      setIsLoading(false);
+      setLoadingError(null);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      clearTimeout(timeout);
+    };
   }, []);
 
   const bootstrapInitialData = async () => {
     try {
+      console.log("Firestore: Committing bootstrap batch...");
       const batch = writeBatch(db);
       INITIAL_MODELS.forEach(model => {
         const docRef = doc(db, 'models', model.id);
         batch.set(docRef, model);
       });
       await batch.commit();
+      console.log("Firestore: Bootstrap successful.");
       setIsLoading(false);
     } catch (error) {
+      console.error("Firestore Error in bootstrapInitialData:", error);
       handleFirestoreError(error, OperationType.WRITE, 'models');
     }
   };
@@ -563,25 +678,30 @@ export default function App() {
   }, [models]);
 
   const handleCloseFortnight = async () => {
+    const updatedList = models.map(m => {
+      const sortedHistory = [...(m.history || [])].sort((a, b) => a.timestamp - b.timestamp);
+      const lastTimestamp = sortedHistory.length > 0 ? sortedHistory[sortedHistory.length - 1].timestamp : Date.now() - 1000;
+      const newTimestamp = Math.max(Date.now(), lastTimestamp + 1000);
+
+      return {
+        ...m,
+        history: [...(m.history || []), { 
+          period: closingPeriod, 
+          tokens: m.currentTokens,
+          timestamp: newTimestamp,
+          chaturbate: m.chaturbate ? { ...m.chaturbate } : undefined,
+          stripchat: m.stripchat ? { ...m.stripchat } : undefined
+        }].sort((a, b) => a.timestamp - b.timestamp).slice(-6),
+        currentTokens: 0,
+        lastUpdate: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long' })
+      };
+    });
+
     try {
       const batch = writeBatch(db);
-      models.forEach(m => {
-        const sortedHistory = [...(m.history || [])].sort((a, b) => a.timestamp - b.timestamp);
-        const lastTimestamp = sortedHistory.length > 0 ? sortedHistory[sortedHistory.length - 1].timestamp : Date.now() - 1000;
-        const newTimestamp = Math.max(Date.now(), lastTimestamp + 1000);
-
-        const updatedModel = {
-          ...m,
-          history: [...(m.history || []), { 
-            period: closingPeriod, 
-            tokens: m.currentTokens,
-            timestamp: newTimestamp
-          }].sort((a, b) => a.timestamp - b.timestamp).slice(-6),
-          currentTokens: 0,
-          lastUpdate: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long' })
-        };
+      updatedList.forEach(m => {
         const docRef = doc(db, 'models', m.id);
-        batch.update(docRef, updatedModel);
+        batch.update(docRef, m);
       });
       await batch.commit();
       setShowCloseConfirm(false);
@@ -610,22 +730,37 @@ export default function App() {
   };
 
   const handleAddModel = async () => {
+    const id = Date.now().toString();
+    const newModel: ModelData = {
+      id,
+      name: 'Nueva Modelo',
+      level: 'Desarrollo',
+      shift: 'Mañana',
+      currentTokens: 0,
+      baseGoal: 0,
+      challengeGoal: 0,
+      strategicFocus: '',
+      strategyDetails: '',
+      steps: [],
+      lastUpdate: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long' }),
+      history: [],
+      chaturbate: {
+        hoursOnline: 0,
+        usersInRoom: 0,
+        followersGained: 0,
+        fanClubMembers: 0,
+        scoreRanking: 0
+      },
+      stripchat: {
+        hoursOnline: 0,
+        usersInRoom: 0,
+        followersGained: 0,
+        fanClubMembers: 0,
+        scoreRanking: 0
+      }
+    };
+
     try {
-      const id = Date.now().toString();
-      const newModel: ModelData = {
-        id,
-        name: 'Nueva Modelo',
-        level: 'Desarrollo',
-        shift: 'Mañana',
-        currentTokens: 0,
-        baseGoal: 0,
-        challengeGoal: 0,
-        strategicFocus: '',
-        strategyDetails: '',
-        steps: [],
-        lastUpdate: new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'long' }),
-        history: []
-      };
       await setDoc(doc(db, 'models', id), newModel);
       setEditingModel(newModel);
     } catch (error) {
@@ -652,10 +787,30 @@ export default function App() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-white/40 font-bold uppercase tracking-widest text-xs">Cargando Tribu...</p>
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-6 max-w-sm text-center">
+          {!loadingError ? (
+            <>
+              <div className="w-12 h-12 border-4 border-red-500 border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-white/40 font-bold uppercase tracking-widest text-xs">Cargando Tribu...</p>
+            </>
+          ) : (
+            <>
+              <div className="w-16 h-16 bg-red-500/20 rounded-2xl flex items-center justify-center">
+                <AlertCircle className="w-8 h-8 text-red-500" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-xl font-bold">Error de Carga</h2>
+                <p className="text-white/40 text-sm">{loadingError}</p>
+              </div>
+              <button 
+                onClick={() => window.location.reload()}
+                className="bg-white text-black px-6 py-2 rounded-xl font-bold text-sm hover:bg-white/90 transition-all"
+              >
+                Reintentar
+              </button>
+            </>
+          )}
         </div>
       </div>
     );
@@ -763,110 +918,143 @@ export default function App() {
               </div>
 
               {/* Models Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredModels.map((model) => (
-                  <motion.div
-                    key={model.id}
-                    whileHover={{ y: -5 }}
-                    onClick={() => handleSelectModel(model.id)}
-                    className="group cursor-pointer bg-white/5 border border-white/10 rounded-3xl p-6 hover:bg-white/[0.08] transition-all hover:border-white/20"
+              {filteredModels.length === 0 ? (
+                <div className="bg-white/5 border border-white/10 rounded-3xl p-12 text-center max-w-xl mx-auto flex flex-col items-center justify-center space-y-6">
+                  <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center border border-red-500/20">
+                    <Users className="w-8 h-8 text-red-500" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-xl font-bold">No hay modelos registradas</h3>
+                    <p className="text-white/40 text-sm max-w-md">
+                      Comienza agregando tu primera modelo para realizar el seguimiento de métricas y proyecciones quincenales en la base de datos.
+                    </p>
+                  </div>
+                  <button 
+                    onClick={handleAddModel}
+                    className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-2xl flex items-center gap-2 font-bold transition-all shadow-lg shadow-red-500/20 cursor-pointer"
                   >
-                    <div className="flex justify-between items-start mb-6">
-                      <div className="space-y-1">
-                        <div className="flex gap-2 mb-1">
-                          <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${LEVEL_COLORS[model.level]}`}>
-                            {LEVEL_ICONS[model.level]}
-                            {model.level}
-                          </div>
-                          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-white/10 bg-white/5 text-white/60">
-                            {model.shift}
-                          </div>
-                        </div>
-                        <h3 className="text-xl font-bold group-hover:text-red-400 transition-colors">{model.name}</h3>
-                      </div>
-                      <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-all">
-                        <ChevronRight className="w-5 h-5" />
-                      </div>
-                    </div>
-
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-end">
+                    <Plus className="w-5 h-5" />
+                    Añadir Modelo
+                  </button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredModels.map((model) => (
+                    <motion.div
+                      key={model.id}
+                      whileHover={{ y: -5 }}
+                      onClick={() => handleSelectModel(model.id)}
+                      className="group cursor-pointer bg-white/5 border border-white/10 rounded-3xl p-6 hover:bg-white/[0.08] transition-all hover:border-white/20"
+                    >
+                      <div className="flex justify-between items-start mb-6">
                         <div className="space-y-1">
-                          <span className="text-white/40 text-xs uppercase font-bold tracking-widest block">Actual</span>
-                          <span className="text-2xl font-mono font-bold">{model.currentTokens.toLocaleString()} <span className="text-xs text-white/40">TK</span></span>
+                          <div className="flex gap-2 mb-1">
+                            <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${LEVEL_COLORS[model.level]}`}>
+                              {LEVEL_ICONS[model.level]}
+                              {model.level}
+                            </div>
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border border-white/10 bg-white/5 text-white/60">
+                              {model.shift}
+                            </div>
+                          </div>
+                          <h3 className="text-xl font-bold group-hover:text-red-400 transition-colors">{model.name}</h3>
                         </div>
+                        <div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center group-hover:bg-red-500 group-hover:text-white transition-all">
+                          <ChevronRight className="w-5 h-5" />
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-end">
+                          <div className="space-y-1">
+                            <span className="text-white/40 text-xs uppercase font-bold tracking-widest block">Actual</span>
+                            <span className="text-2xl font-mono font-bold">{model.currentTokens.toLocaleString()} <span className="text-xs text-white/40">TK</span></span>
+                          </div>
+                          {model.history && model.history.length > 0 && (() => {
+                            const trend = calculateTrend(model);
+                            return (
+                              <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg bg-white/5 border border-white/5 ${
+                                trend >= 0 ? 'text-emerald-400' : 'text-red-400'
+                              }`}>
+                                {trend >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                                {Math.abs(trend).toFixed(1)}%
+                              </div>
+                            );
+                          })()}
+                        </div>
+                        
+                        <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-red-500 to-yellow-400 rounded-full transition-all duration-1000" 
+                            style={{ width: `${Math.min((model.currentTokens / model.challengeGoal) * 100, 100)}%` }}
+                          ></div>
+                        </div>
+
+                        {/* Mini Sparkline */}
                         {model.history && model.history.length > 0 && (() => {
+                          const currentPeriod = getCurrentPeriodLabel();
+                          const closedHistory = model.history.filter(h => h.period !== currentPeriod)
+                            .sort((a, b) => a.timestamp - b.timestamp);
+                          
+                          // Only include current period in sparkline if it has data
+                          const sparkData = [...closedHistory.map(h => ({ tokens: h.tokens, timestamp: h.timestamp }))];
+                          if (model.currentTokens > 0) {
+                            sparkData.push({ tokens: model.currentTokens, timestamp: Date.now() });
+                          }
+                          
+                          const finalData = sparkData.slice(-5);
+                          if (finalData.length < 2) return null;
+
                           const trend = calculateTrend(model);
+                          const isUp = trend >= 0;
+                          
                           return (
-                            <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-lg bg-white/5 border border-white/5 ${
-                              trend >= 0 ? 'text-emerald-400' : 'text-red-400'
-                            }`}>
-                              {trend >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-                              {Math.abs(trend).toFixed(1)}%
+                            <div className="h-12 w-full opacity-50 group-hover:opacity-100 transition-opacity">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={finalData}>
+                                  <Area 
+                                    type="monotone" 
+                                    dataKey="tokens" 
+                                    stroke={isUp ? "#10b981" : "#ef4444"} 
+                                    fill={isUp ? "#10b981" : "#ef4444"} 
+                                    fillOpacity={0.1} 
+                                    strokeWidth={2} 
+                                    dot={false}
+                                    isAnimationActive={false}
+                                  />
+                                </AreaChart>
+                              </ResponsiveContainer>
                             </div>
                           );
                         })()}
-                      </div>
-                      
-                      <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-red-500 to-yellow-400 rounded-full transition-all duration-1000" 
-                          style={{ width: `${Math.min((model.currentTokens / model.challengeGoal) * 100, 100)}%` }}
-                        ></div>
-                      </div>
 
-                      {/* Mini Sparkline */}
-                      {model.history && model.history.length > 0 && (() => {
-                        const currentPeriod = getCurrentPeriodLabel();
-                        const closedHistory = model.history.filter(h => h.period !== currentPeriod)
-                          .sort((a, b) => a.timestamp - b.timestamp);
-                        
-                        // Only include current period in sparkline if it has data
-                        const sparkData = [...closedHistory.map(h => ({ tokens: h.tokens, timestamp: h.timestamp }))];
-                        if (model.currentTokens > 0) {
-                          sparkData.push({ tokens: model.currentTokens, timestamp: Date.now() });
-                        }
-                        
-                        const finalData = sparkData.slice(-5);
-                        if (finalData.length < 2) return null;
+                        {/* Platform quick info hours indicator */}
+                        <div className="flex items-center gap-3 text-[10px] text-white/30 font-bold uppercase tracking-wider border-t border-white/5 pt-2">
+                          <span className="flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-orange-400"></span>
+                            CB: <span className="text-white/60 font-mono">{model.chaturbate?.hoursOnline ?? 0}h</span>
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
+                            SC: <span className="text-white/60 font-mono">{model.stripchat?.hoursOnline ?? 0}h</span>
+                          </span>
+                        </div>
 
-                        const trend = calculateTrend(model);
-                        const isUp = trend >= 0;
-                        
-                        return (
-                          <div className="h-12 w-full opacity-50 group-hover:opacity-100 transition-opacity">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <AreaChart data={finalData}>
-                                <Area 
-                                  type="monotone" 
-                                  dataKey="tokens" 
-                                  stroke={isUp ? "#10b981" : "#ef4444"} 
-                                  fill={isUp ? "#10b981" : "#ef4444"} 
-                                  fillOpacity={0.1} 
-                                  strokeWidth={2} 
-                                  dot={false}
-                                  isAnimationActive={false}
-                                />
-                              </AreaChart>
-                            </ResponsiveContainer>
+                        <div className="grid grid-cols-2 gap-3 pt-2">
+                          <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
+                            <span className="block text-[10px] text-white/40 font-bold uppercase mb-1">Meta Base</span>
+                            <span className="text-sm font-bold text-emerald-400">{model.baseGoal.toLocaleString()}</span>
                           </div>
-                        );
-                      })()}
-
-                      <div className="grid grid-cols-2 gap-3 pt-2">
-                        <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
-                          <span className="block text-[10px] text-white/40 font-bold uppercase mb-1">Meta Base</span>
-                          <span className="text-sm font-bold text-emerald-400">{model.baseGoal.toLocaleString()}</span>
-                        </div>
-                        <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
-                          <span className="block text-[10px] text-white/40 font-bold uppercase mb-1">Meta Reto</span>
-                          <span className="text-sm font-bold text-yellow-400">{model.challengeGoal.toLocaleString()}</span>
+                          <div className="bg-white/5 rounded-2xl p-3 border border-white/5">
+                            <span className="block text-[10px] text-white/40 font-bold uppercase mb-1">Meta Reto</span>
+                            <span className="text-sm font-bold text-yellow-400">{model.challengeGoal.toLocaleString()}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </motion.div>
           ) : view === 'performance' ? (
             <motion.div 
@@ -1024,6 +1212,142 @@ export default function App() {
                           </div>
                         </div>
                       </div>
+
+                      {/* Detailed Platforms History Toggler */}
+                      {(() => {
+                        const isExpanded = expandedPeriodsModelId === model.id;
+                        
+                        // Construct all periods (current + historical)
+                        const allPeriodsList = [];
+                        
+                        // Current period
+                        allPeriodsList.push({
+                          period: `${currentPeriodLabel}`,
+                          tokens: model.currentTokens,
+                          isCurrent: true,
+                          chaturbate: {
+                            hoursOnline: model.chaturbate?.hoursOnline ?? 0,
+                            usersInRoom: model.chaturbate?.usersInRoom ?? 0,
+                            followersGained: model.chaturbate?.followersGained ?? 0,
+                            fanClubMembers: model.chaturbate?.fanClubMembers ?? 0,
+                            scoreRanking: model.chaturbate?.scoreRanking ?? 0
+                          },
+                          stripchat: {
+                            hoursOnline: model.stripchat?.hoursOnline ?? 0,
+                            usersInRoom: model.stripchat?.usersInRoom ?? 0,
+                            followersGained: model.stripchat?.followersGained ?? 0,
+                            fanClubMembers: model.stripchat?.fanClubMembers ?? 0,
+                            scoreRanking: model.stripchat?.scoreRanking ?? 0
+                          }
+                        });
+                        
+                        // Previous periods (newest first)
+                        const prevHistory = [...(model.history || [])].sort((a, b) => b.timestamp - a.timestamp);
+                        prevHistory.forEach(rec => {
+                          allPeriodsList.push({
+                            period: rec.period,
+                            tokens: rec.tokens,
+                            isCurrent: false,
+                            chaturbate: {
+                              hoursOnline: rec.chaturbate?.hoursOnline ?? 0,
+                              usersInRoom: rec.chaturbate?.usersInRoom ?? 0,
+                              followersGained: rec.chaturbate?.followersGained ?? 0,
+                              fanClubMembers: rec.chaturbate?.fanClubMembers ?? 0,
+                              scoreRanking: rec.chaturbate?.scoreRanking ?? 0
+                            },
+                            stripchat: {
+                              hoursOnline: rec.stripchat?.hoursOnline ?? 0,
+                              usersInRoom: rec.stripchat?.usersInRoom ?? 0,
+                              followersGained: rec.stripchat?.followersGained ?? 0,
+                              fanClubMembers: rec.stripchat?.fanClubMembers ?? 0,
+                              scoreRanking: rec.stripchat?.scoreRanking ?? 0
+                            }
+                          });
+                        });
+
+                        return (
+                          <>
+                            <div className="mt-6 pt-6 border-t border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                              <p className="text-xs text-white/40">
+                                {isExpanded 
+                                  ? 'Mostrando desglose completo de plataformas por quincena' 
+                                  : 'Despliega el panel para auditar métricas de Chaturbate y Stripchat de quincenas previas y la actual'}
+                              </p>
+                              <button
+                                onClick={() => setExpandedPeriodsModelId(isExpanded ? null : model.id)}
+                                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 text-xs font-bold uppercase tracking-wider text-red-400 border border-red-500/10 hover:bg-red-500/25 transition-all self-end sm:self-auto"
+                              >
+                                {isExpanded ? (
+                                  <>Ocultar Métricas <ChevronUp className="w-4 h-4" /></>
+                                ) : (
+                                  <>Ver Métricas Completas <ChevronDown className="w-4 h-4" /></>
+                                )}
+                              </button>
+                            </div>
+
+                            <AnimatePresence>
+                              {isExpanded && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  transition={{ duration: 0.3 }}
+                                  className="overflow-hidden"
+                                >
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6 mt-6 border-t border-white/5">
+                                    {allPeriodsList.map((periodRec, pIdx) => (
+                                      <div 
+                                        key={pIdx} 
+                                        className={`border rounded-[1.5rem] p-5 space-y-4 transition-all relative overflow-hidden ${
+                                          periodRec.isCurrent 
+                                            ? 'bg-gradient-to-b from-red-500/5 to-transparent border-red-500/20 shadow-[0_4px_20px_-10px_rgba(239,68,68,0.1)]' 
+                                            : 'bg-white/[0.02] border-white/5'
+                                        }`}
+                                      >
+                                        <div className="flex justify-between items-center border-b border-white/5 pb-3">
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-xs font-extrabold uppercase text-white tracking-widest">{periodRec.period}</span>
+                                            {periodRec.isCurrent && (
+                                              <span className="px-1.5 py-0.5 rounded bg-red-500/20 text-[8px] font-bold text-red-400 uppercase tracking-wider">Activa</span>
+                                            )}
+                                          </div>
+                                          <span className="text-sm font-mono font-black text-red-400">{periodRec.tokens.toLocaleString()} TK</span>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4 divide-x divide-white/5">
+                                          {/* Chaturbate Column */}
+                                          <div className="space-y-2">
+                                            <span className="text-[10px] font-black text-orange-400 uppercase tracking-widest block">Chaturbate</span>
+                                            <div className="text-xs space-y-1 font-mono text-white/50">
+                                              <div className="flex justify-between"><span>Duración:</span><span className="text-white font-bold">{periodRec.chaturbate.hoursOnline}h</span></div>
+                                              <div className="flex justify-between"><span>Sala:</span><span className="text-white font-bold">{periodRec.chaturbate.usersInRoom}</span></div>
+                                              <div className="flex justify-between"><span>Seguid:</span><span className="text-white font-bold">+{periodRec.chaturbate.followersGained}</span></div>
+                                              <div className="flex justify-between"><span>Fans:</span><span className="text-white font-bold">{periodRec.chaturbate.fanClubMembers}</span></div>
+                                              <div className="flex justify-between border-t border-white/5 pt-1 mt-1"><span>Rango:</span><span className="text-orange-400 font-extrabold">#{periodRec.chaturbate.scoreRanking || '-'}</span></div>
+                                            </div>
+                                          </div>
+
+                                          {/* Stripchat Column */}
+                                          <div className="space-y-2 pl-4 animate-none">
+                                            <span className="text-[10px] font-black text-red-500 uppercase tracking-widest block">Stripchat</span>
+                                            <div className="text-xs space-y-1 font-mono text-white/50">
+                                              <div className="flex justify-between"><span>Duración:</span><span className="text-white font-bold">{periodRec.stripchat.hoursOnline}h</span></div>
+                                              <div className="flex justify-between"><span>Sala:</span><span className="text-white font-bold">{periodRec.stripchat.usersInRoom}</span></div>
+                                              <div className="flex justify-between"><span>Seguid:</span><span className="text-white font-bold">+{periodRec.stripchat.followersGained}</span></div>
+                                              <div className="flex justify-between"><span>Fans:</span><span className="text-white font-bold">{periodRec.stripchat.fanClubMembers}</span></div>
+                                              <div className="flex justify-between border-t border-white/5 pt-1 mt-1"><span>Rango:</span><span className="text-red-500 font-extrabold">#{periodRec.stripchat.scoreRanking || '-'}</span></div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </>
+                        );
+                      })()}
                     </motion.div>
                   );
                 })}
@@ -1146,6 +1470,151 @@ export default function App() {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Platform metrics panel */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* Chaturbate Card */}
+                <div className="bg-gradient-to-b from-orange-500/10 to-transparent border border-orange-500/10 rounded-[2rem] p-8 space-y-6 relative overflow-hidden">
+                  <div className="flex justify-between items-center relative z-10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                        <Sparkles className="w-5 h-5 text-orange-400" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold tracking-tight">Chaturbate</h3>
+                        <p className="text-xs text-orange-400/60 font-semibold uppercase tracking-wider">Métricas de Rendimiento</p>
+                      </div>
+                    </div>
+                    {selectedModel?.chaturbate?.scoreRanking ? (
+                      <div className="bg-orange-500/10 border border-orange-500/20 px-3 py-1 rounded-xl flex items-center gap-1.5 text-xs font-bold text-orange-400">
+                        <Trophy className="w-3.5 h-3.5" />
+                        Rank #{selectedModel?.chaturbate?.scoreRanking}
+                      </div>
+                    ) : (
+                      <div className="bg-white/5 px-3 py-1 rounded-xl text-xs font-bold text-white/40">
+                        Rank -
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 relative z-10">
+                    <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+                      <div className="p-2.5 bg-white/5 rounded-xl text-orange-400">
+                        <Clock className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] uppercase tracking-widest text-white/40 font-bold">Horas Online</span>
+                        <span className="text-lg font-mono font-bold">{selectedModel?.chaturbate?.hoursOnline ?? 0}h</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+                      <div className="p-2.5 bg-white/5 rounded-xl text-orange-400">
+                        <Users className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] uppercase tracking-widest text-white/40 font-bold">Usuarios Sala</span>
+                        <span className="text-lg font-mono font-bold">{(selectedModel?.chaturbate?.usersInRoom ?? 0).toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+                      <div className="p-2.5 bg-white/5 rounded-xl text-orange-400">
+                        <Star className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] uppercase tracking-widest text-white/40 font-bold">Seguidores</span>
+                        <span className="text-lg font-mono font-bold">+{ (selectedModel?.chaturbate?.followersGained ?? 0).toLocaleString() }</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+                      <div className="p-2.5 bg-white/5 rounded-xl text-orange-400">
+                        <Crown className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] uppercase tracking-widest text-white/40 font-bold">Club Fans</span>
+                        <span className="text-lg font-mono font-bold">{(selectedModel?.chaturbate?.fanClubMembers ?? 0).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Subtle Platform-Colored background blur decoration */}
+                  <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-orange-500/5 rounded-full blur-[40px] pointer-events-none" />
+                </div>
+
+                {/* Stripchat Card */}
+                <div className="bg-gradient-to-b from-red-500/10 to-transparent border border-red-500/10 rounded-[2rem] p-8 space-y-6 relative overflow-hidden">
+                  <div className="flex justify-between items-center relative z-10">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center">
+                        <Flame className="w-5 h-5 text-red-500" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-bold tracking-tight">Stripchat</h3>
+                        <p className="text-xs text-red-400/60 font-semibold uppercase tracking-wider">Métricas de Rendimiento</p>
+                      </div>
+                    </div>
+                    {selectedModel?.stripchat?.scoreRanking ? (
+                      <div className="bg-red-500/10 border border-red-500/20 px-3 py-1 rounded-xl flex items-center gap-1.5 text-xs font-bold text-red-400">
+                        <Trophy className="w-3.5 h-3.5" />
+                        Rank #{selectedModel?.stripchat?.scoreRanking}
+                      </div>
+                    ) : (
+                      <div className="bg-white/5 px-3 py-1 rounded-xl text-xs font-bold text-white/40">
+                        Rank -
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 relative z-10">
+                    <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+                      <div className="p-2.5 bg-white/5 rounded-xl text-red-500">
+                        <Clock className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] uppercase tracking-widest text-white/40 font-bold">Horas Online</span>
+                        <span className="text-lg font-mono font-bold">{selectedModel?.stripchat?.hoursOnline ?? 0}h</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+                      <div className="p-2.5 bg-white/5 rounded-xl text-red-500">
+                        <Users className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] uppercase tracking-widest text-white/40 font-bold">Usuarios Sala</span>
+                        <span className="text-lg font-mono font-bold">{(selectedModel?.stripchat?.usersInRoom ?? 0).toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+                      <div className="p-2.5 bg-white/5 rounded-xl text-red-500">
+                        <Star className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] uppercase tracking-widest text-white/40 font-bold">Seguidores</span>
+                        <span className="text-lg font-mono font-bold">+{ (selectedModel?.stripchat?.followersGained ?? 0).toLocaleString() }</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-black/30 border border-white/5 rounded-2xl p-4 flex items-center gap-3">
+                      <div className="p-2.5 bg-white/5 rounded-xl text-red-500">
+                        <Crown className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <span className="block text-[10px] uppercase tracking-widest text-white/40 font-bold">Club Fans</span>
+                        <span className="text-lg font-mono font-bold">{(selectedModel?.stripchat?.fanClubMembers ?? 0).toLocaleString()}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Subtle Platform-Colored background blur decoration */}
+                  <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-red-500/5 rounded-full blur-[40px] pointer-events-none" />
+                </div>
+
               </div>
 
               {/* Motivational Quote */}
@@ -1363,7 +1832,7 @@ export default function App() {
                       initial={{ opacity: 0, scale: 0.9, y: 20 }}
                       animate={{ opacity: 1, scale: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                      className="relative w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] p-8 shadow-2xl"
+                      className="relative w-full max-w-2xl bg-[#0a0a0a] border border-white/10 rounded-[2.5rem] p-8 shadow-2xl max-h-[85vh] overflow-y-auto"
                     >
                       <div className="flex justify-between items-center mb-8">
                         <h3 className="text-2xl font-bold">Editar Modelo</h3>
@@ -1448,49 +1917,290 @@ export default function App() {
                             type="number" 
                             value={editingModel.challengeGoal}
                             onChange={(e) => setEditingModel({...editingModel, challengeGoal: parseInt(e.target.value) || 0})}
-                            className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:border-red-500 transition-all font-mono text-yellow-400"
+                            className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:border-red-500 transition-all font-mono"
                           />
                         </div>
                         <div className="md:col-span-2 space-y-3">
-                          <label className="text-xs font-bold text-white/40 uppercase tracking-widest block">Historial de Quincenas (Tokens)</label>
-                          <div className="space-y-2">
+                          <label className="text-xs font-bold text-white/40 uppercase tracking-widest block font-sans">Historial de Quincenas (Tokens y Métricas)</label>
+                          <div className="space-y-3">
                             {(editingModel.history || []).map((record, i) => (
-                              <div key={i} className="flex items-center gap-3 bg-white/5 p-2 rounded-xl border border-white/5">
-                                <input 
-                                  type="text" 
-                                  value={record.period}
-                                  onChange={(e) => {
-                                    const newHistory = [...editingModel.history];
-                                    newHistory[i] = { ...newHistory[i], period: e.target.value };
-                                    setEditingModel({...editingModel, history: newHistory});
-                                  }}
-                                  className="flex-1 bg-transparent border-none focus:ring-0 text-[10px] font-bold uppercase text-white/40"
-                                  placeholder="Periodo (ej: 1-15 Abr 2026)"
-                                />
-                                <div className="flex flex-col items-end gap-1">
+                              <div key={i} className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-3">
+                                <div className="flex items-center gap-3">
                                   <input 
-                                    type="number" 
-                                    value={record.tokens}
+                                    type="text" 
+                                    value={record.period}
                                     onChange={(e) => {
                                       const newHistory = [...editingModel.history];
-                                      newHistory[i] = { ...newHistory[i], tokens: parseInt(e.target.value) || 0 };
+                                      newHistory[i] = { ...newHistory[i], period: e.target.value };
                                       setEditingModel({...editingModel, history: newHistory});
                                     }}
-                                    className="w-24 bg-black/40 border border-white/10 rounded-lg px-2 py-1 focus:outline-none focus:border-red-500 transition-all font-mono text-sm text-right"
+                                    className="flex-1 bg-transparent border-none focus:ring-0 text-xs font-bold uppercase text-white/80"
+                                    placeholder="Periodo (ej: 1-15 Abr 2026)"
                                   />
-                                  <span className="text-[8px] text-white/20 font-mono">
-                                    {new Date(record.timestamp).toLocaleDateString()}
-                                  </span>
+                                  <div className="flex flex-col items-end gap-1">
+                                    <input 
+                                      type="number" 
+                                      value={record.tokens}
+                                      onChange={(e) => {
+                                        const newHistory = [...editingModel.history];
+                                        newHistory[i] = { ...newHistory[i], tokens: parseInt(e.target.value) || 0 };
+                                        setEditingModel({...editingModel, history: newHistory});
+                                      }}
+                                      className="w-24 bg-black/40 border border-white/10 rounded-lg px-2 py-1 focus:outline-none focus:border-red-500 transition-all font-mono text-sm text-right"
+                                      placeholder="Tokens"
+                                    />
+                                    <span className="text-[8px] text-white/20 font-mono">
+                                      {new Date(record.timestamp).toLocaleDateString()}
+                                    </span>
+                                  </div>
+                                  <button 
+                                    onClick={() => {
+                                      const newHistory = editingModel.history.filter((_, idx) => idx !== i);
+                                      setEditingModel({...editingModel, history: newHistory});
+                                    }}
+                                    className="p-1 hover:text-red-500 transition-colors"
+                                  >
+                                    <X className="w-4 h-4" />
+                                  </button>
                                 </div>
-                                <button 
-                                  onClick={() => {
-                                    const newHistory = editingModel.history.filter((_, idx) => idx !== i);
-                                    setEditingModel({...editingModel, history: newHistory});
-                                  }}
-                                  className="p-1 hover:text-red-500 transition-colors"
-                                >
-                                  <X className="w-4 h-4" />
-                                </button>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-white/5 pt-3">
+                                  {/* Chaturbate */}
+                                  <div className="space-y-1.5 bg-orange-500/[0.02] border border-orange-500/10 p-2 rounded-xl text-[10px]">
+                                    <div className="text-[9px] font-bold text-orange-400 uppercase tracking-wider mb-1">Metrics Chaturbate</div>
+                                    <div className="grid grid-cols-2 gap-1.5 font-mono">
+                                      <div>
+                                        <label className="text-[8px] text-white/30 uppercase block">Horas</label>
+                                        <input 
+                                          type="number" 
+                                          step="0.1"
+                                          value={record.chaturbate?.hoursOnline ?? 0}
+                                          onChange={(e) => {
+                                            const newHistory = [...editingModel.history];
+                                            newHistory[i] = { 
+                                              ...newHistory[i], 
+                                              chaturbate: { 
+                                                hoursOnline: parseFloat(e.target.value) || 0,
+                                                usersInRoom: record.chaturbate?.usersInRoom ?? 0,
+                                                followersGained: record.chaturbate?.followersGained ?? 0,
+                                                fanClubMembers: record.chaturbate?.fanClubMembers ?? 0,
+                                                scoreRanking: record.chaturbate?.scoreRanking ?? 0
+                                              }
+                                            };
+                                            setEditingModel({...editingModel, history: newHistory});
+                                          }}
+                                          className="w-full bg-black/20 border border-white/10 rounded px-1.5 py-0.5 text-center text-xs"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[8px] text-white/30 uppercase block">Usuarios</label>
+                                        <input 
+                                          type="number" 
+                                          value={record.chaturbate?.usersInRoom ?? 0}
+                                          onChange={(e) => {
+                                            const newHistory = [...editingModel.history];
+                                            newHistory[i] = { 
+                                              ...newHistory[i], 
+                                              chaturbate: { 
+                                                hoursOnline: record.chaturbate?.hoursOnline ?? 0,
+                                                usersInRoom: parseInt(e.target.value) || 0,
+                                                followersGained: record.chaturbate?.followersGained ?? 0,
+                                                fanClubMembers: record.chaturbate?.fanClubMembers ?? 0,
+                                                scoreRanking: record.chaturbate?.scoreRanking ?? 0
+                                              }
+                                            };
+                                            setEditingModel({...editingModel, history: newHistory});
+                                          }}
+                                          className="w-full bg-black/20 border border-white/10 rounded px-1.5 py-0.5 text-center text-xs"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[8px] text-white/30 uppercase block">Seguid.</label>
+                                        <input 
+                                          type="number" 
+                                          value={record.chaturbate?.followersGained ?? 0}
+                                          onChange={(e) => {
+                                            const newHistory = [...editingModel.history];
+                                            newHistory[i] = { 
+                                              ...newHistory[i], 
+                                              chaturbate: { 
+                                                hoursOnline: record.chaturbate?.hoursOnline ?? 0,
+                                                usersInRoom: record.chaturbate?.usersInRoom ?? 0,
+                                                followersGained: parseInt(e.target.value) || 0,
+                                                fanClubMembers: record.chaturbate?.fanClubMembers ?? 0,
+                                                scoreRanking: record.chaturbate?.scoreRanking ?? 0
+                                              }
+                                            };
+                                            setEditingModel({...editingModel, history: newHistory});
+                                          }}
+                                          className="w-full bg-black/20 border border-white/10 rounded px-1.5 py-0.5 text-center text-xs"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[8px] text-white/30 uppercase block">Club Fans</label>
+                                        <input 
+                                          type="number" 
+                                          value={record.chaturbate?.fanClubMembers ?? 0}
+                                          onChange={(e) => {
+                                            const newHistory = [...editingModel.history];
+                                            newHistory[i] = { 
+                                              ...newHistory[i], 
+                                              chaturbate: { 
+                                                hoursOnline: record.chaturbate?.hoursOnline ?? 0,
+                                                usersInRoom: record.chaturbate?.usersInRoom ?? 0,
+                                                followersGained: record.chaturbate?.followersGained ?? 0,
+                                                fanClubMembers: parseInt(e.target.value) || 0,
+                                                scoreRanking: record.chaturbate?.scoreRanking ?? 0
+                                              }
+                                            };
+                                            setEditingModel({...editingModel, history: newHistory});
+                                          }}
+                                          className="w-full bg-black/20 border border-white/10 rounded px-1.5 py-0.5 text-center text-xs"
+                                        />
+                                      </div>
+                                      <div className="col-span-2">
+                                        <label className="text-[8px] text-white/30 uppercase block">Score / Ranking</label>
+                                        <input 
+                                          type="number" 
+                                          value={record.chaturbate?.scoreRanking ?? 0}
+                                          onChange={(e) => {
+                                            const newHistory = [...editingModel.history];
+                                            newHistory[i] = { 
+                                              ...newHistory[i], 
+                                              chaturbate: { 
+                                                hoursOnline: record.chaturbate?.hoursOnline ?? 0,
+                                                usersInRoom: record.chaturbate?.usersInRoom ?? 0,
+                                                followersGained: record.chaturbate?.followersGained ?? 0,
+                                                fanClubMembers: record.chaturbate?.fanClubMembers ?? 0,
+                                                scoreRanking: parseInt(e.target.value) || 0
+                                              }
+                                            };
+                                            setEditingModel({...editingModel, history: newHistory});
+                                          }}
+                                          className="w-full bg-black/20 border border-white/10 rounded px-1.5 py-0.5 text-center text-xs text-orange-400 font-bold"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Stripchat */}
+                                  <div className="space-y-1.5 bg-red-500/[0.02] border border-red-500/10 p-2 rounded-xl text-[10px]">
+                                    <div className="text-[9px] font-bold text-red-400 uppercase tracking-wider mb-1">Metrics Stripchat</div>
+                                    <div className="grid grid-cols-2 gap-1.5 font-mono">
+                                      <div>
+                                        <label className="text-[8px] text-white/30 uppercase block">Horas</label>
+                                        <input 
+                                          type="number" 
+                                          step="0.1"
+                                          value={record.stripchat?.hoursOnline ?? 0}
+                                          onChange={(e) => {
+                                            const newHistory = [...editingModel.history];
+                                            newHistory[i] = { 
+                                              ...newHistory[i], 
+                                              stripchat: { 
+                                                hoursOnline: parseFloat(e.target.value) || 0,
+                                                usersInRoom: record.stripchat?.usersInRoom ?? 0,
+                                                followersGained: record.stripchat?.followersGained ?? 0,
+                                                fanClubMembers: record.stripchat?.fanClubMembers ?? 0,
+                                                scoreRanking: record.stripchat?.scoreRanking ?? 0
+                                              }
+                                            };
+                                            setEditingModel({...editingModel, history: newHistory});
+                                          }}
+                                          className="w-full bg-black/20 border border-white/10 rounded px-1.5 py-0.5 text-center text-xs"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[8px] text-white/30 uppercase block">Usuarios</label>
+                                        <input 
+                                          type="number" 
+                                          value={record.stripchat?.usersInRoom ?? 0}
+                                          onChange={(e) => {
+                                            const newHistory = [...editingModel.history];
+                                            newHistory[i] = { 
+                                              ...newHistory[i], 
+                                              stripchat: { 
+                                                hoursOnline: record.stripchat?.hoursOnline ?? 0,
+                                                usersInRoom: parseInt(e.target.value) || 0,
+                                                followersGained: record.stripchat?.followersGained ?? 0,
+                                                fanClubMembers: record.stripchat?.fanClubMembers ?? 0,
+                                                scoreRanking: record.stripchat?.scoreRanking ?? 0
+                                              }
+                                            };
+                                            setEditingModel({...editingModel, history: newHistory});
+                                          }}
+                                          className="w-full bg-black/20 border border-white/10 rounded px-1.5 py-0.5 text-center text-xs"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[8px] text-white/30 uppercase block">Seguid.</label>
+                                        <input 
+                                          type="number" 
+                                          value={record.stripchat?.followersGained ?? 0}
+                                          onChange={(e) => {
+                                            const newHistory = [...editingModel.history];
+                                            newHistory[i] = { 
+                                              ...newHistory[i], 
+                                              stripchat: { 
+                                                hoursOnline: record.stripchat?.hoursOnline ?? 0,
+                                                usersInRoom: record.stripchat?.usersInRoom ?? 0,
+                                                followersGained: parseInt(e.target.value) || 0,
+                                                fanClubMembers: record.stripchat?.fanClubMembers ?? 0,
+                                                scoreRanking: record.stripchat?.scoreRanking ?? 0
+                                              }
+                                            };
+                                            setEditingModel({...editingModel, history: newHistory});
+                                          }}
+                                          className="w-full bg-black/20 border border-white/10 rounded px-1.5 py-0.5 text-center text-xs"
+                                        />
+                                      </div>
+                                      <div>
+                                        <label className="text-[8px] text-white/30 uppercase block">Club Fans</label>
+                                        <input 
+                                          type="number" 
+                                          value={record.stripchat?.fanClubMembers ?? 0}
+                                          onChange={(e) => {
+                                            const newHistory = [...editingModel.history];
+                                            newHistory[i] = { 
+                                              ...newHistory[i], 
+                                              stripchat: { 
+                                                hoursOnline: record.stripchat?.hoursOnline ?? 0,
+                                                usersInRoom: record.stripchat?.usersInRoom ?? 0,
+                                                followersGained: record.stripchat?.followersGained ?? 0,
+                                                fanClubMembers: parseInt(e.target.value) || 0,
+                                                scoreRanking: record.stripchat?.scoreRanking ?? 0
+                                              }
+                                            };
+                                            setEditingModel({...editingModel, history: newHistory});
+                                          }}
+                                          className="w-full bg-black/20 border border-white/10 rounded px-1.5 py-0.5 text-center text-xs"
+                                        />
+                                      </div>
+                                      <div className="col-span-2">
+                                        <label className="text-[8px] text-white/30 uppercase block">Score / Ranking</label>
+                                        <input 
+                                          type="number" 
+                                          value={record.stripchat?.scoreRanking ?? 0}
+                                          onChange={(e) => {
+                                            const newHistory = [...editingModel.history];
+                                            newHistory[i] = { 
+                                              ...newHistory[i], 
+                                              stripchat: { 
+                                                hoursOnline: record.stripchat?.hoursOnline ?? 0,
+                                                usersInRoom: record.stripchat?.usersInRoom ?? 0,
+                                                followersGained: record.stripchat?.followersGained ?? 0,
+                                                fanClubMembers: record.stripchat?.fanClubMembers ?? 0,
+                                                scoreRanking: parseInt(e.target.value) || 0
+                                              }
+                                            };
+                                            setEditingModel({...editingModel, history: newHistory});
+                                          }}
+                                          className="w-full bg-black/20 border border-white/10 rounded px-1.5 py-0.5 text-center text-xs text-red-500 font-bold"
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             ))}
                             <button 
@@ -1498,7 +2208,9 @@ export default function App() {
                                 const newHistory = [...(editingModel.history || []), { 
                                   period: '', 
                                   tokens: 0,
-                                  timestamp: Date.now()
+                                  timestamp: Date.now(),
+                                  chaturbate: { hoursOnline: 0, usersInRoom: 0, followersGained: 0, fanClubMembers: 0, scoreRanking: 0 },
+                                  stripchat: { hoursOnline: 0, usersInRoom: 0, followersGained: 0, fanClubMembers: 0, scoreRanking: 0 }
                                 }];
                                 setEditingModel({...editingModel, history: newHistory});
                               }}
@@ -1530,6 +2242,216 @@ export default function App() {
                             placeholder="Describe cómo alcanzar las metas..."
                             className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 focus:outline-none focus:border-red-500 transition-all resize-none"
                           />
+                        </div>
+                      </div>
+
+                      {/* Platform Metrics Section */}
+                      <div className="space-y-6 mb-8 border-t border-white/5 pt-6">
+                        <h4 className="text-sm font-bold uppercase tracking-widest text-white/40">Métricas de Plataformas</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          
+                          {/* Chaturbate Card */}
+                          <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl space-y-4">
+                            <div className="flex items-center gap-2 text-orange-400 font-bold text-xs uppercase tracking-wider">
+                              <span className="w-2 h-2 rounded-full bg-orange-400"></span>
+                              Chaturbate
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-white/30 uppercase tracking-wider">Horas Online</label>
+                                <input 
+                                  type="number"
+                                  step="0.1"
+                                  value={editingModel.chaturbate?.hoursOnline ?? 0}
+                                  onChange={(e) => setEditingModel({
+                                    ...editingModel,
+                                    chaturbate: {
+                                      hoursOnline: parseFloat(e.target.value) || 0,
+                                      usersInRoom: editingModel.chaturbate?.usersInRoom ?? 0,
+                                      followersGained: editingModel.chaturbate?.followersGained ?? 0,
+                                      fanClubMembers: editingModel.chaturbate?.fanClubMembers ?? 0,
+                                      scoreRanking: editingModel.chaturbate?.scoreRanking ?? 0
+                                    }
+                                  })}
+                                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500 transition-all font-mono"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-white/30 uppercase tracking-wider">Usuarios Sala</label>
+                                <input 
+                                  type="number"
+                                  value={editingModel.chaturbate?.usersInRoom ?? 0}
+                                  onChange={(e) => setEditingModel({
+                                    ...editingModel,
+                                    chaturbate: {
+                                      hoursOnline: editingModel.chaturbate?.hoursOnline ?? 0,
+                                      usersInRoom: parseInt(e.target.value) || 0,
+                                      followersGained: editingModel.chaturbate?.followersGained ?? 0,
+                                      fanClubMembers: editingModel.chaturbate?.fanClubMembers ?? 0,
+                                      scoreRanking: editingModel.chaturbate?.scoreRanking ?? 0
+                                    }
+                                  })}
+                                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500 transition-all font-mono"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-white/30 uppercase tracking-wider">Seguidores Ganados</label>
+                                <input 
+                                  type="number"
+                                  value={editingModel.chaturbate?.followersGained ?? 0}
+                                  onChange={(e) => setEditingModel({
+                                    ...editingModel,
+                                    chaturbate: {
+                                      hoursOnline: editingModel.chaturbate?.hoursOnline ?? 0,
+                                      usersInRoom: editingModel.chaturbate?.usersInRoom ?? 0,
+                                      followersGained: parseInt(e.target.value) || 0,
+                                      fanClubMembers: editingModel.chaturbate?.fanClubMembers ?? 0,
+                                      scoreRanking: editingModel.chaturbate?.scoreRanking ?? 0
+                                    }
+                                  })}
+                                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500 transition-all font-mono"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-white/30 uppercase tracking-wider">Club de Fans</label>
+                                <input 
+                                  type="number"
+                                  value={editingModel.chaturbate?.fanClubMembers ?? 0}
+                                  onChange={(e) => setEditingModel({
+                                    ...editingModel,
+                                    chaturbate: {
+                                      hoursOnline: editingModel.chaturbate?.hoursOnline ?? 0,
+                                      usersInRoom: editingModel.chaturbate?.usersInRoom ?? 0,
+                                      followersGained: editingModel.chaturbate?.followersGained ?? 0,
+                                      fanClubMembers: parseInt(e.target.value) || 0,
+                                      scoreRanking: editingModel.chaturbate?.scoreRanking ?? 0
+                                    }
+                                  })}
+                                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500 transition-all font-mono"
+                                />
+                              </div>
+                              <div className="col-span-2 space-y-1">
+                                <label className="text-[10px] font-bold text-white/30 uppercase tracking-wider">Score / Ranking</label>
+                                <input 
+                                  type="number"
+                                  value={editingModel.chaturbate?.scoreRanking ?? 0}
+                                  onChange={(e) => setEditingModel({
+                                    ...editingModel,
+                                    chaturbate: {
+                                      hoursOnline: editingModel.chaturbate?.hoursOnline ?? 0,
+                                      usersInRoom: editingModel.chaturbate?.usersInRoom ?? 0,
+                                      followersGained: editingModel.chaturbate?.followersGained ?? 0,
+                                      fanClubMembers: editingModel.chaturbate?.fanClubMembers ?? 0,
+                                      scoreRanking: parseInt(e.target.value) || 0
+                                    }
+                                  })}
+                                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500 transition-all font-mono"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Stripchat Card */}
+                          <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl space-y-4">
+                            <div className="flex items-center gap-2 text-red-400 font-bold text-xs uppercase tracking-wider">
+                              <span className="w-2 h-2 rounded-full bg-red-400"></span>
+                              Stripchat
+                            </div>
+                            <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-white/30 uppercase tracking-wider">Horas Online</label>
+                                <input 
+                                  type="number"
+                                  step="0.1"
+                                  value={editingModel.stripchat?.hoursOnline ?? 0}
+                                  onChange={(e) => setEditingModel({
+                                    ...editingModel,
+                                    stripchat: {
+                                      hoursOnline: parseFloat(e.target.value) || 0,
+                                      usersInRoom: editingModel.stripchat?.usersInRoom ?? 0,
+                                      followersGained: editingModel.stripchat?.followersGained ?? 0,
+                                      fanClubMembers: editingModel.stripchat?.fanClubMembers ?? 0,
+                                      scoreRanking: editingModel.stripchat?.scoreRanking ?? 0
+                                    }
+                                  })}
+                                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500 transition-all font-mono"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-white/30 uppercase tracking-wider">Usuarios Sala</label>
+                                <input 
+                                  type="number"
+                                  value={editingModel.stripchat?.usersInRoom ?? 0}
+                                  onChange={(e) => setEditingModel({
+                                    ...editingModel,
+                                    stripchat: {
+                                      hoursOnline: editingModel.stripchat?.hoursOnline ?? 0,
+                                      usersInRoom: parseInt(e.target.value) || 0,
+                                      followersGained: editingModel.stripchat?.followersGained ?? 0,
+                                      fanClubMembers: editingModel.stripchat?.fanClubMembers ?? 0,
+                                      scoreRanking: editingModel.stripchat?.scoreRanking ?? 0
+                                    }
+                                  })}
+                                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500 transition-all font-mono"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-white/30 uppercase tracking-wider">Seguidores Ganados</label>
+                                <input 
+                                  type="number"
+                                  value={editingModel.stripchat?.followersGained ?? 0}
+                                  onChange={(e) => setEditingModel({
+                                    ...editingModel,
+                                    stripchat: {
+                                      hoursOnline: editingModel.stripchat?.hoursOnline ?? 0,
+                                      usersInRoom: editingModel.stripchat?.usersInRoom ?? 0,
+                                      followersGained: parseInt(e.target.value) || 0,
+                                      fanClubMembers: editingModel.stripchat?.fanClubMembers ?? 0,
+                                      scoreRanking: editingModel.stripchat?.scoreRanking ?? 0
+                                    }
+                                  })}
+                                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500 transition-all font-mono"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-[10px] font-bold text-white/30 uppercase tracking-wider">Club de Fans</label>
+                                <input 
+                                  type="number"
+                                  value={editingModel.stripchat?.fanClubMembers ?? 0}
+                                  onChange={(e) => setEditingModel({
+                                    ...editingModel,
+                                    stripchat: {
+                                      hoursOnline: editingModel.stripchat?.hoursOnline ?? 0,
+                                      usersInRoom: editingModel.stripchat?.usersInRoom ?? 0,
+                                      followersGained: editingModel.stripchat?.followersGained ?? 0,
+                                      fanClubMembers: parseInt(e.target.value) || 0,
+                                      scoreRanking: editingModel.stripchat?.scoreRanking ?? 0
+                                    }
+                                  })}
+                                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500 transition-all font-mono"
+                                />
+                              </div>
+                              <div className="col-span-2 space-y-1">
+                                <label className="text-[10px] font-bold text-white/30 uppercase tracking-wider">Score / Ranking</label>
+                                <input 
+                                  type="number"
+                                  value={editingModel.stripchat?.scoreRanking ?? 0}
+                                  onChange={(e) => setEditingModel({
+                                    ...editingModel,
+                                    stripchat: {
+                                      hoursOnline: editingModel.stripchat?.hoursOnline ?? 0,
+                                      usersInRoom: editingModel.stripchat?.usersInRoom ?? 0,
+                                      followersGained: editingModel.stripchat?.followersGained ?? 0,
+                                      fanClubMembers: editingModel.stripchat?.fanClubMembers ?? 0,
+                                      scoreRanking: parseInt(e.target.value) || 0
+                                    }
+                                  })}
+                                  className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-red-500 transition-all font-mono"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
                         </div>
                       </div>
 
